@@ -60,10 +60,11 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 7 — CLI entry point
 
-- [ ] `src/index.ts` — commander program setup, wire all commands
-- [ ] Verify `node bin/thermal-label.js --help` works
-- [ ] Gate: typecheck + lint + test + build
-- [ ] Commit
+- [x] `src/index.ts` — commander program setup, wire all commands
+- [x] Verify `node bin/thermal-label.js --help` works
+- [x] Verify `node bin/thermal-label.js list --drivers` against real (unretrofitted) drivers
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 8 — README
 
