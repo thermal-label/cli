@@ -22,10 +22,10 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 2 — Driver discovery
 
-- [ ] `src/discovery.ts` — `loadDrivers`, `listDriverStatus`, `KNOWN_DRIVERS`
-- [ ] `src/__tests__/discovery.test.ts` — all mocked, no real driver imports
-- [ ] Gate: typecheck + lint + test + build
-- [ ] Commit
+- [x] `src/discovery.ts` — `loadDrivers`, `listDriverStatus`, `KNOWN_DRIVERS`
+- [x] `src/__tests__/discovery.test.ts` — all mocked, no real driver imports
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 3 — List command
 
