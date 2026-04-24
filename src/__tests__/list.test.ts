@@ -77,7 +77,12 @@ describe('list command', () => {
   it('aggregates printers across multiple drivers', async () => {
     const { out, lines } = collectOutput();
     const discoveryA = mockDiscovery('brother-ql', [
-      { family: 'brother-ql', name: 'QL-820NWB', transport: 'usb', connectionId: 'Bus 003 Dev 010' },
+      {
+        family: 'brother-ql',
+        name: 'QL-820NWB',
+        transport: 'usb',
+        connectionId: 'Bus 003 Dev 010',
+      },
     ]);
     const discoveryB = mockDiscovery('labelwriter', [
       {
@@ -88,8 +93,10 @@ describe('list command', () => {
       },
     ]);
     const importer = vi.fn((pkg: string) => {
-      if (pkg === '@thermal-label/brother-ql-node') return Promise.resolve({ discovery: discoveryA });
-      if (pkg === '@thermal-label/labelwriter-node') return Promise.resolve({ discovery: discoveryB });
+      if (pkg === '@thermal-label/brother-ql-node')
+        return Promise.resolve({ discovery: discoveryA });
+      if (pkg === '@thermal-label/labelwriter-node')
+        return Promise.resolve({ discovery: discoveryB });
       return Promise.reject(new Error('missing'));
     });
     await listCommand({ importer, out });

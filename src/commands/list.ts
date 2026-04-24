@@ -43,7 +43,10 @@ export async function listCommand(options: ListCommandOptions = {}): Promise<voi
 
   const printers = await discoverAll(drivers.map(d => d.discovery));
   if (printers.length === 0) {
-    printNoPrintersFound(out, drivers.map(d => d.discovery.family));
+    printNoPrintersFound(
+      out,
+      drivers.map(d => d.discovery.family),
+    );
     return;
   }
 

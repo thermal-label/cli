@@ -13,7 +13,11 @@ import { PNG } from 'pngjs';
 
 import { printImageCommand } from '../commands/print-image.js';
 
-function makePngBuffer(width: number, height: number, fill: [number, number, number, number]): Buffer {
+function makePngBuffer(
+  width: number,
+  height: number,
+  fill: [number, number, number, number],
+): Buffer {
   const png = new PNG({ width, height });
   for (let i = 0; i < width * height; i++) {
     png.data[i * 4] = fill[0];
@@ -189,8 +193,7 @@ describe('print image command', () => {
 
   it('errors with a clear message when the file cannot be loaded', async () => {
     const mock = mockAdapter(stdMedia);
-    const readFileFn = (): Promise<Buffer> =>
-      Promise.reject(new Error('ENOENT: no such file'));
+    const readFileFn = (): Promise<Buffer> => Promise.reject(new Error('ENOENT: no such file'));
     const importer = (pkg: string) =>
       pkg === '@thermal-label/brother-ql-node'
         ? Promise.resolve({ discovery: mockDiscovery(mock) })
@@ -303,7 +306,9 @@ describe('print image command', () => {
         : Promise.reject(new Error('missing'));
     const lines: string[] = [];
     await printImageCommand('/fake.png', { importer, readFileFn, out: s => lines.push(s) });
-    expect(lines.some(l => l.includes('Print failed') && l.includes('transport disconnect'))).toBe(true);
+    expect(lines.some(l => l.includes('Print failed') && l.includes('transport disconnect'))).toBe(
+      true,
+    );
     expect(process.exitCode).toBe(1);
     expect(closes).toBe(1);
   });

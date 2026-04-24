@@ -47,8 +47,7 @@ function mockDiscovery(init: MockPrinterInit[]): {
       ),
     openPrinter: (options?: OpenOptions) => {
       openCalls.push(options ?? {});
-      const match =
-        init.find(p => options?.serialNumber === p.serialNumber) ?? init[0];
+      const match = init.find(p => options?.serialNumber === p.serialNumber) ?? init[0];
       if (!match) return Promise.reject(new Error('no printer'));
       const idx = adapters.length;
       const adapter: PrinterAdapter = {
@@ -189,8 +188,10 @@ describe('status command', () => {
       { family: 'labelwriter', name: 'LabelWriter 450', status: baseStatus() },
     ]);
     const importer = (pkg: string) => {
-      if (pkg === '@thermal-label/brother-ql-node') return Promise.resolve({ discovery: qlDiscovery });
-      if (pkg === '@thermal-label/labelwriter-node') return Promise.resolve({ discovery: lwDiscovery });
+      if (pkg === '@thermal-label/brother-ql-node')
+        return Promise.resolve({ discovery: qlDiscovery });
+      if (pkg === '@thermal-label/labelwriter-node')
+        return Promise.resolve({ discovery: lwDiscovery });
       return Promise.reject(new Error('missing'));
     };
     await statusCommand({ importer, out, printer: 'labelwriter' });
@@ -199,7 +200,9 @@ describe('status command', () => {
 
   it('errors when --host is given without --printer', async () => {
     const { out, lines } = collect();
-    const { discovery } = mockDiscovery([{ family: 'brother-ql', name: 'QL-820NWB', status: baseStatus() }]);
+    const { discovery } = mockDiscovery([
+      { family: 'brother-ql', name: 'QL-820NWB', status: baseStatus() },
+    ]);
     const importer = (pkg: string) =>
       pkg === '@thermal-label/brother-ql-node'
         ? Promise.resolve({ discovery })
@@ -306,13 +309,17 @@ describe('status command', () => {
         ? Promise.resolve({ discovery })
         : Promise.reject(new Error('missing'));
     await statusCommand({ importer, out });
-    expect(lines.some(l => l.includes('Failed to open printer') && l.includes('USB permission denied'))).toBe(true);
+    expect(
+      lines.some(l => l.includes('Failed to open printer') && l.includes('USB permission denied')),
+    ).toBe(true);
     expect(process.exitCode).toBe(1);
   });
 
   it('errors when --printer is a family that is not installed', async () => {
     const { out, lines } = collect();
-    const { discovery } = mockDiscovery([{ family: 'brother-ql', name: 'QL-820NWB', status: baseStatus() }]);
+    const { discovery } = mockDiscovery([
+      { family: 'brother-ql', name: 'QL-820NWB', status: baseStatus() },
+    ]);
     const importer = (pkg: string) =>
       pkg === '@thermal-label/brother-ql-node'
         ? Promise.resolve({ discovery })

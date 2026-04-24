@@ -19,10 +19,7 @@ interface MockAdapter {
   readonly closeCalls: number;
 }
 
-function mockAdapter(
-  detectedMedia?: MediaDescriptor,
-  throwOnPrint?: Error,
-): MockAdapter {
+function mockAdapter(detectedMedia?: MediaDescriptor, throwOnPrint?: Error): MockAdapter {
   const printCalls: { image: RawImageData; options?: PrintOptions }[] = [];
   let closes = 0;
   const adapter: PrinterAdapter = {

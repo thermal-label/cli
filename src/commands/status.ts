@@ -53,7 +53,9 @@ function printStatus(
   port?: number,
 ): void {
   out(`${chalk.bold('Printer:')}   ${printer.model} (${printer.family})`);
-  out(`${chalk.bold('Status:')}    ${status.ready ? chalk.green('Ready') : chalk.yellow('Not ready')}`);
+  out(
+    `${chalk.bold('Status:')}    ${status.ready ? chalk.green('Ready') : chalk.yellow('Not ready')}`,
+  );
   out(`${chalk.bold('Media:')}     ${formatMedia(status.mediaLoaded, status.detectedMedia)}`);
   if (status.errors.length === 0) {
     out(`${chalk.bold('Errors:')}    none`);

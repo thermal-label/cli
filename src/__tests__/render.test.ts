@@ -10,7 +10,11 @@ import {
   renderTextLabel,
 } from '../render.js';
 
-function makePngBuffer(width: number, height: number, fill: [number, number, number, number]): Buffer {
+function makePngBuffer(
+  width: number,
+  height: number,
+  fill: [number, number, number, number],
+): Buffer {
   const png = new PNG({ width, height });
   for (let i = 0; i < width * height; i++) {
     png.data[i * 4] = fill[0];

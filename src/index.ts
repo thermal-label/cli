@@ -1,10 +1,7 @@
 import { Command } from 'commander';
 
 import { listCommand, type ListCommandOptions } from './commands/list.js';
-import {
-  printImageCommand,
-  type PrintImageCommandOptions,
-} from './commands/print-image.js';
+import { printImageCommand, type PrintImageCommandOptions } from './commands/print-image.js';
 import { printTextCommand, type PrintTextCommandOptions } from './commands/print-text.js';
 import { statusCommand, type StatusCommandOptions } from './commands/status.js';
 

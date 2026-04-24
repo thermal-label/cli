@@ -2,7 +2,12 @@ import { discoverAll } from '@thermal-label/transport';
 
 import type { DiscoveredPrinter, OpenOptions } from '@thermal-label/contracts';
 
-import { KNOWN_DRIVERS, loadDrivers, type DynamicImporter, type LoadedDriver } from '../discovery.js';
+import {
+  KNOWN_DRIVERS,
+  loadDrivers,
+  type DynamicImporter,
+  type LoadedDriver,
+} from '../discovery.js';
 
 export interface PrinterSelector {
   printer?: string;
@@ -82,7 +87,9 @@ export async function selectPrinter(
   if (!picked) throw new SelectionError('Internal: no picked printer.');
   const driver = filtered.find(d => d.discovery.family === picked.device.family);
   if (!driver) {
-    throw new SelectionError(`Internal: no driver for discovered family '${picked.device.family}'.`);
+    throw new SelectionError(
+      `Internal: no driver for discovered family '${picked.device.family}'.`,
+    );
   }
 
   const opts: OpenOptions = {};
@@ -94,7 +101,9 @@ function formatMultiple(printers: readonly DiscoveredPrinter[]): string {
   const lines = ['Multiple printers found:'];
   for (const p of printers) {
     const serial = p.serialNumber === undefined ? '' : `  serial=${p.serialNumber}`;
-    lines.push(`  ${p.device.family}  ${p.device.name}  ${p.transport}  ${p.connectionId}${serial}`);
+    lines.push(
+      `  ${p.device.family}  ${p.device.name}  ${p.transport}  ${p.connectionId}${serial}`,
+    );
   }
   lines.push('', 'Use --printer <family> or --serial <sn> to pick one.');
   return lines.join('\n');
