@@ -68,8 +68,8 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 8 — README
 
-- [ ] Publish-ready per PLAN §8
-- [ ] Commit
+- [x] Publish-ready per PLAN §8
+- [x] Commit
 
 ## Step 9 — Final
 
