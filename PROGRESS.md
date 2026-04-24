@@ -51,12 +51,12 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 6 — Print commands
 
-- [ ] `src/commands/print-text.ts`
-- [ ] `src/commands/print-image.ts`
-- [ ] `src/__tests__/print-text.test.ts`
-- [ ] `src/__tests__/print-image.test.ts`
-- [ ] Gate: typecheck + lint + test + build
-- [ ] Commit
+- [x] `src/commands/print-text.ts`
+- [x] `src/commands/print-image.ts`
+- [x] `src/__tests__/print-text.test.ts`
+- [x] `src/__tests__/print-image.test.ts`
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 7 — CLI entry point
 
