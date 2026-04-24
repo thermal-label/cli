@@ -36,10 +36,11 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 4 — Status command
 
-- [ ] `src/commands/status.ts`
-- [ ] `src/__tests__/status.test.ts`
-- [ ] Gate: typecheck + lint + test + build
-- [ ] Commit
+- [x] `src/commands/status.ts`
+- [x] `src/commands/select.ts` (shared printer-selection logic)
+- [x] `src/__tests__/status.test.ts`
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 5 — Render helpers
 
