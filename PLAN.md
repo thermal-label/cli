@@ -1,4 +1,4 @@
-# @thermal-label/cli — Implementation Plan
+# thermal-label-cli — Implementation Plan
 
 > Unified CLI for thermal label printers. Replaces the three per-driver
 > CLIs (`labelmanager-cli`, `labelwriter-cli`, `brother-ql-cli`) with a
@@ -319,7 +319,7 @@ what bitmap actually exports and decide. Log in DECISIONS.md.
 
 ```json
 {
-  "name": "@thermal-label/cli",
+  "name": "thermal-label-cli",
   "version": "0.1.0",
   "description": "Unified CLI for thermal label printers — auto-detects all installed drivers",
   "keywords": ["thermal-label", "printer", "cli", "dymo", "brother", "label"],
@@ -438,7 +438,7 @@ fake `PrinterDiscovery` implementations.
 
 ### 8.1 This CLI vs burnmark-cli
 
-| | `@thermal-label/cli` | `burnmark-cli` |
+| | `thermal-label-cli` | `burnmark-cli` |
 |---|---|---|
 | Purpose | Test hardware, quick prints | Design and produce labels |
 | Rendering | Pixel font via `@mbtech-nl/bitmap` | Full Canvas fonts via `@napi-rs/canvas` |
@@ -454,6 +454,19 @@ fake `PrinterDiscovery` implementations.
 > Test and print to any supported thermal printer from the command line.
 > For templates, barcodes, and production label workflows, see
 > [burnmark-cli](https://github.com/burnmark-io/designer-core).
+
+### 8.3 README Install Example
+
+```bash
+# Install CLI + the driver for your printer
+npm install -g thermal-label-cli @thermal-label/brother-ql-node
+
+# List connected printers
+thermal-label list
+
+# Print a test label
+thermal-label print text "Hello World"
+```
 
 ---
 
