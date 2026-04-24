@@ -216,4 +216,133 @@ describe('print image command', () => {
     await printImageCommand('/fake.png', { importer, readFileFn, out: vi.fn() });
     expect(mock.closeCalls).toBe(1);
   });
+
+  it('reports a helpful message on MediaNotSpecifiedError', async () => {
+    const pngBytes = makePngBuffer(2, 2, [0, 0, 0, 255]);
+    const readFileFn = (): Promise<Buffer> => Promise.resolve(pngBytes);
+    const { MediaNotSpecifiedError } = await import('@thermal-label/contracts');
+    let closes = 0;
+    const adapter: PrinterAdapter = {
+      family: 'brother-ql',
+      model: 'QL-820NWB',
+      connected: true,
+      getStatus: () =>
+        Promise.resolve({
+          ready: true,
+          mediaLoaded: true,
+          errors: [],
+          rawBytes: new Uint8Array(),
+        }),
+      print: () => Promise.reject(new MediaNotSpecifiedError()),
+      createPreview: () => Promise.reject(new Error('not used')),
+      close: () => {
+        closes++;
+        return Promise.resolve();
+      },
+    };
+    const discovery: PrinterDiscovery = {
+      family: 'brother-ql',
+      listPrinters: () =>
+        Promise.resolve([
+          {
+            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            transport: 'usb',
+            connectionId: 'mock',
+          },
+        ]),
+      openPrinter: () => Promise.resolve(adapter),
+    };
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+    const lines: string[] = [];
+    await printImageCommand('/fake.png', { importer, readFileFn, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('No media'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+    expect(closes).toBe(1);
+  });
+
+  it('reports generic print failures with exit code 1', async () => {
+    const pngBytes = makePngBuffer(2, 2, [0, 0, 0, 255]);
+    const readFileFn = (): Promise<Buffer> => Promise.resolve(pngBytes);
+    let closes = 0;
+    const adapter: PrinterAdapter = {
+      family: 'brother-ql',
+      model: 'QL-820NWB',
+      connected: true,
+      getStatus: () =>
+        Promise.resolve({
+          ready: true,
+          mediaLoaded: true,
+          errors: [],
+          rawBytes: new Uint8Array(),
+        }),
+      print: () => Promise.reject(new Error('transport disconnect')),
+      createPreview: () => Promise.reject(new Error('not used')),
+      close: () => {
+        closes++;
+        return Promise.resolve();
+      },
+    };
+    const discovery: PrinterDiscovery = {
+      family: 'brother-ql',
+      listPrinters: () =>
+        Promise.resolve([
+          {
+            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            transport: 'usb',
+            connectionId: 'mock',
+          },
+        ]),
+      openPrinter: () => Promise.resolve(adapter),
+    };
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+    const lines: string[] = [];
+    await printImageCommand('/fake.png', { importer, readFileFn, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('Print failed') && l.includes('transport disconnect'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+    expect(closes).toBe(1);
+  });
+
+  it('errors cleanly when no printer is found (covers selection error path)', async () => {
+    const pngBytes = makePngBuffer(2, 2, [0, 0, 0, 255]);
+    const readFileFn = (): Promise<Buffer> => Promise.resolve(pngBytes);
+    const importer = (pkg: string) => {
+      void pkg;
+      return Promise.reject(new Error('missing'));
+    };
+    const lines: string[] = [];
+    await printImageCommand('/fake.png', { importer, readFileFn, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('No driver packages'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports failure to open printer with exit code 1', async () => {
+    const pngBytes = makePngBuffer(2, 2, [0, 0, 0, 255]);
+    const readFileFn = (): Promise<Buffer> => Promise.resolve(pngBytes);
+    const discovery: PrinterDiscovery = {
+      family: 'brother-ql',
+      listPrinters: () =>
+        Promise.resolve([
+          {
+            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            transport: 'usb',
+            connectionId: 'mock',
+          },
+        ]),
+      openPrinter: () => Promise.reject(new Error('USB permission denied')),
+    };
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+    const lines: string[] = [];
+    await printImageCommand('/fake.png', { importer, readFileFn, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('Failed to open printer'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
 });

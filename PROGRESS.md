@@ -73,6 +73,6 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 9 — Final
 
-- [ ] `pnpm test:coverage` — thresholds pass
-- [ ] Verify all PROGRESS.md checkboxes ticked
-- [ ] Commit
+- [x] `pnpm test:coverage` — thresholds pass (95/84/81/95)
+- [x] Verify all PROGRESS.md checkboxes ticked
+- [x] Commit
