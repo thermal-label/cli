@@ -4,16 +4,24 @@ Judgment calls made during implementation that deviate from, or fill gaps
 in, `PLAN.md`. Operator was unavailable — decisions documented here for
 later review.
 
-## D1 — Image decoding via pure-JS libs instead of `sharp`
+## D1 — Image decoding: PNG + JPEG only, pure-JS, no BMP
 
-**Plan said:** §5.2 suggested `sharp` "if bitmap doesn't have loadImage".
-**Chose:** `pngjs`, `jpeg-js`, `decode-bmp` — three small pure-JS packages.
+**Plan said:** §2.4 lists "PNG, JPEG, BMP". §5.2 suggested `sharp` for
+decoding.
+**Chose:** `pngjs` + `jpeg-js` (pure JS). Dropped BMP.
 
 **Why:** The CLI's positioning (PLAN §8.1) emphasises a tiny install.
 `sharp` bundles platform-specific native binaries and adds tens of MB
-per install. The pure-JS trio each weighs under 100 KB, works on any
-platform without prebuilt binaries, and only needs to decode a file
-once — performance is irrelevant for a one-off CLI invocation.
+per install. The pure-JS pair each weighs under 100 KB, works on any
+platform without prebuilt binaries, and decodes a file once per CLI
+invocation — performance is irrelevant at this scale.
+
+BMP is rare in modern workflows (PNG/JPEG cover label-design output
+from every common tool) and adding a decoder just to satisfy the plan
+wasn't worth the extra dependency and test surface. Users who produce
+BMPs can convert to PNG in their source tool. If operator wants BMP
+back, re-add `decode-bmp` and extend `loadImageFile`'s dispatcher.
+
 `@mbtech-nl/bitmap` exposes `renderImage` (threshold/dither/invert/
 rotate) so no additional image transforms from `sharp` are needed.
 

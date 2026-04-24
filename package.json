@@ -68,7 +68,6 @@
     "@thermal-label/transport": "^0.1.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
-    "decode-bmp": "^0.2.1",
     "jpeg-js": "^0.4.4",
     "pngjs": "^7.0.0"
   },

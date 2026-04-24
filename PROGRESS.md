@@ -44,9 +44,10 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 5 — Render helpers
 
-- [ ] `src/render.ts` — `renderTextLabel`, `renderImageLabel`, `labelBitmapToRawImageData`
-- [ ] Gate: typecheck + lint + build
-- [ ] Commit
+- [x] `src/render.ts` — `renderTextLabel`, `renderImageLabel`, `labelBitmapToRawImageData`
+- [x] `src/__tests__/render.test.ts` — added early for coverage
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 6 — Print commands
 
