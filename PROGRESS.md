@@ -29,10 +29,10 @@ Tracks completion of the steps in `PLAN.md` §10.
 
 ## Step 3 — List command
 
-- [ ] `src/commands/list.ts`
-- [ ] `src/__tests__/list.test.ts`
-- [ ] Gate: typecheck + lint + test + build
-- [ ] Commit
+- [x] `src/commands/list.ts`
+- [x] `src/__tests__/list.test.ts`
+- [x] Gate: typecheck + lint + test + build
+- [x] Commit
 
 ## Step 4 — Status command
 
