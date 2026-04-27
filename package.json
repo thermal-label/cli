@@ -1,6 +1,6 @@
 {
   "name": "thermal-label-cli",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Unified CLI for thermal label printers — auto-detects all installed drivers",
   "keywords": [
     "thermal-label",
