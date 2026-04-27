@@ -12,17 +12,17 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@thermal-label/brother-ql-node':
-        specifier: '>=0.0.1'
-        version: 0.0.1
+        specifier: '>=0.3.0'
+        version: 0.3.0
       '@thermal-label/contracts':
         specifier: ^0.2.0
         version: 0.2.0
       '@thermal-label/labelmanager-node':
-        specifier: '>=0.0.1'
-        version: 0.0.1
+        specifier: '>=0.3.0'
+        version: 0.3.0
       '@thermal-label/labelwriter-node':
-        specifier: '>=0.0.1'
-        version: 0.0.1
+        specifier: '>=0.3.0'
+        version: 0.3.0
       '@thermal-label/transport':
         specifier: ^0.2.2
         version: 0.2.2(usb@2.17.0)
@@ -326,16 +326,16 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@mbtech-nl/bitmap@0.1.0':
-    resolution: {integrity: sha512-VwciWADh5KjMPgPlHyv6SZFc2kftD0JZS5kU3zpdg1m7VJX4BgeO6IJXnnqFZXpFo3gHVeuHg/Ujcl+Lj/ZHmA==}
-    engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
-
   '@mbtech-nl/bitmap@1.0.1':
     resolution: {integrity: sha512-Mfmw2s97d8B1gkqkUUN0E69cF+ZfFXDOJOvGbhC5XbRu04PEoItHhPI3J85w2FKHRyDX/96xErfohFil36dprg==}
     engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
 
   '@mbtech-nl/bitmap@1.2.0':
     resolution: {integrity: sha512-P5UfR/PXM6CQcQ5WA5kEVl0P+ZgVxQPCKR2bGdP01a4p/ycn8fMBoiwM7j5Ng1LoPW+CcnRRr0kUy9vF56U/Pw==}
+    engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
+
+  '@mbtech-nl/bitmap@1.2.2':
+    resolution: {integrity: sha512-7mXxRrS3yLoiWeKxsqlA23uBSl11/qz/ToBCdurJ+7/2Cz3aMWQbMmsSTwDh7RC9f7xeAI8hd3TtwMoR5l5Hew==}
     engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
 
   '@mbtech-nl/eslint-config@1.0.1':
@@ -560,31 +560,31 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@thermal-label/brother-ql-core@0.0.1':
-    resolution: {integrity: sha512-q0QdoPbm97oWYQB8XXg3EFjRTJLHgilZHhEnnAcqfKXs5rivQmRWfCxRHuz+THNhwr+GVS2mvArBr5BgLc4+5g==}
+  '@thermal-label/brother-ql-core@0.3.0':
+    resolution: {integrity: sha512-JuGlpRXymwe0qYF0W3tceY9PGIztYqZ8qKLKXReNwOxoCntTOalj62ad1mYVECsvlI3ZizwxSzyhrsh9nhB5rA==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/brother-ql-node@0.0.1':
-    resolution: {integrity: sha512-+1a6GADju2bUCN4BFnli2tu1lrkShu+UipC+91fU452LJ9MiniI/rVMJEcISH2aFebGXiXkMLCfMYsi2GEZDPg==}
+  '@thermal-label/brother-ql-node@0.3.0':
+    resolution: {integrity: sha512-KUaYVqd9wBLrIEjQa7jyRpSa3VaJidpgX8r/ITUE/zhQJT1aIRmmPg71atREUKiTBIsOFd3bt+/1IWLmyH8oqg==}
     engines: {node: '>=24.0.0'}
 
   '@thermal-label/contracts@0.2.0':
     resolution: {integrity: sha512-EqruuizBc8bgZwthZYir9f4t9YWWajMncTOn2+qkWPyxq/z3vU8giIcB4oYfQy7KYcltK0t8L5HKQJrCyvO5zw==}
 
-  '@thermal-label/labelmanager-core@0.0.1':
-    resolution: {integrity: sha512-NfFQcV3mq3EGsEP4rQC7/sZsOz/Xm5Ta1/M3eLgvTjbKIqLK4UmloaF/gZ385hJhcB0lBQMMo89AUxnhV0OaTQ==}
+  '@thermal-label/labelmanager-core@0.3.0':
+    resolution: {integrity: sha512-RuiEvN7khkCHGSjdfKj5354rSHBu0mSTOIRwKAeV3v5bRK1b0a5dPDsASxxE5BYigj2eZ3KR9GcwdpW0KZfVcQ==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/labelmanager-node@0.0.1':
-    resolution: {integrity: sha512-yWhKuL/l373hPxnvi8I7NB7l8cyTxHJCW5azUX6RX5qbLQdP1l7E6vEE1EkebnWaeG1A5EW+MfveibAFiUO9SQ==}
+  '@thermal-label/labelmanager-node@0.3.0':
+    resolution: {integrity: sha512-zTgkRyiWA6CPuHYIJaV7Hkiu/RwMdxNxLsJDFpeU48c+yp9G5hIkgZv95hCWMOa8ZHYAMetl3HKzHjw1caI7Tg==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/labelwriter-core@0.0.1':
-    resolution: {integrity: sha512-k3PcMRqj7KhYb75/rRYObY7af9YE2I/Wk31tVtgmsogdLptsxW/Jvwrsf8G6U6lMw+GLvtiWVCFHZGGqb7dvcQ==}
+  '@thermal-label/labelwriter-core@0.3.0':
+    resolution: {integrity: sha512-tP6YbocZ3xu6T4fAHEMSHb2f/e1CVFgKReD9tItdayGpeN4OlL2bLWGDXS2IsCOutKsI+tlw4ZrEzfkBRWku2Q==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/labelwriter-node@0.0.1':
-    resolution: {integrity: sha512-gDyK0PTf6XvWDXa9iN/wkBliphNgl+5fPNgdUQ8MRoaBa25vZEI6YEUtdBnEesa9w7pnJbd+ZGOCmq5gtvNbJg==}
+  '@thermal-label/labelwriter-node@0.3.0':
+    resolution: {integrity: sha512-7uG6jvJ3DyJLNTEpaMJUFF72qaDQCYARZ2h44QSbaRgZoCT53EjiSnhIPW9DBQ5DZZDauQ+XNNcSd7xYRY2kqA==}
     engines: {node: '>=24.0.0'}
 
   '@thermal-label/transport@0.2.2':
@@ -1905,11 +1905,11 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@mbtech-nl/bitmap@0.1.0': {}
-
   '@mbtech-nl/bitmap@1.0.1': {}
 
   '@mbtech-nl/bitmap@1.2.0': {}
+
+  '@mbtech-nl/bitmap@1.2.2': {}
 
   '@mbtech-nl/eslint-config@1.0.1(@typescript-eslint/utils@8.59.0(eslint@9.39.4)(typescript@5.5.4))(eslint@9.39.4)(typescript@5.5.4)':
     dependencies:
@@ -2065,43 +2065,58 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.2':
     optional: true
 
-  '@thermal-label/brother-ql-core@0.0.1':
+  '@thermal-label/brother-ql-core@0.3.0':
     dependencies:
-      '@mbtech-nl/bitmap': 0.1.0
+      '@mbtech-nl/bitmap': 1.2.2
+      '@thermal-label/contracts': 0.2.0
 
-  '@thermal-label/brother-ql-node@0.0.1':
+  '@thermal-label/brother-ql-node@0.3.0':
     dependencies:
-      '@mbtech-nl/bitmap': 0.1.0
-      '@thermal-label/brother-ql-core': 0.0.1
+      '@mbtech-nl/bitmap': 1.2.2
+      '@thermal-label/brother-ql-core': 0.3.0
+      '@thermal-label/contracts': 0.2.0
+      '@thermal-label/transport': 0.2.2(usb@2.17.0)
       usb: 2.17.0
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
+    transitivePeerDependencies:
+      - serialport
 
   '@thermal-label/contracts@0.2.0':
     dependencies:
       '@mbtech-nl/bitmap': 1.2.0
 
-  '@thermal-label/labelmanager-core@0.0.1':
+  '@thermal-label/labelmanager-core@0.3.0':
     dependencies:
-      '@mbtech-nl/bitmap': 1.0.1
+      '@mbtech-nl/bitmap': 1.2.2
+      '@thermal-label/contracts': 0.2.0
 
-  '@thermal-label/labelmanager-node@0.0.1':
+  '@thermal-label/labelmanager-node@0.3.0':
     dependencies:
-      '@thermal-label/labelmanager-core': 0.0.1
+      '@thermal-label/contracts': 0.2.0
+      '@thermal-label/labelmanager-core': 0.3.0
+      '@thermal-label/transport': 0.2.2(usb@2.17.0)
       usb: 2.17.0
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
+    transitivePeerDependencies:
+      - serialport
 
-  '@thermal-label/labelwriter-core@0.0.1':
+  '@thermal-label/labelwriter-core@0.3.0':
     dependencies:
-      '@mbtech-nl/bitmap': 0.1.0
+      '@mbtech-nl/bitmap': 1.2.2
+      '@thermal-label/contracts': 0.2.0
 
-  '@thermal-label/labelwriter-node@0.0.1':
+  '@thermal-label/labelwriter-node@0.3.0':
     dependencies:
-      '@thermal-label/labelwriter-core': 0.0.1
+      '@thermal-label/contracts': 0.2.0
+      '@thermal-label/labelwriter-core': 0.3.0
+      '@thermal-label/transport': 0.2.2(usb@2.17.0)
       usb: 2.17.0
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
+    transitivePeerDependencies:
+      - serialport
 
   '@thermal-label/transport@0.2.2(usb@2.17.0)':
     dependencies:
