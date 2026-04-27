@@ -72,9 +72,9 @@
     "pngjs": "^7.0.0"
   },
   "peerDependencies": {
-    "@thermal-label/brother-ql-node": ">=0.0.1",
-    "@thermal-label/labelmanager-node": ">=0.0.1",
-    "@thermal-label/labelwriter-node": ">=0.0.1"
+    "@thermal-label/brother-ql-node": ">=0.3.0",
+    "@thermal-label/labelmanager-node": ">=0.3.0",
+    "@thermal-label/labelwriter-node": ">=0.3.0"
   },
   "peerDependenciesMeta": {
     "@thermal-label/brother-ql-node": {
