@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@thermal-label/contracts': 0.2.0
-
 importers:
 
   .:
@@ -18,7 +15,7 @@ importers:
         specifier: '>=0.0.1'
         version: 0.0.1
       '@thermal-label/contracts':
-        specifier: 0.2.0
+        specifier: ^0.2.0
         version: 0.2.0
       '@thermal-label/labelmanager-node':
         specifier: '>=0.0.1'
@@ -27,8 +24,8 @@ importers:
         specifier: '>=0.0.1'
         version: 0.0.1
       '@thermal-label/transport':
-        specifier: ^0.2.1
-        version: 0.2.1(usb@2.17.0)
+        specifier: ^0.2.2
+        version: 0.2.2(usb@2.17.0)
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
@@ -590,8 +587,8 @@ packages:
     resolution: {integrity: sha512-gDyK0PTf6XvWDXa9iN/wkBliphNgl+5fPNgdUQ8MRoaBa25vZEI6YEUtdBnEesa9w7pnJbd+ZGOCmq5gtvNbJg==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/transport@0.2.1':
-    resolution: {integrity: sha512-2rHBfDXQMA+9P9tpCcG7WqlbYrrqMxar4wdYL9ao3LMXla3R/iyeztuorm5JR3w41yRp4CSXOEKnTfBL1PE90A==}
+  '@thermal-label/transport@0.2.2':
+    resolution: {integrity: sha512-HoJJMdw3Y8dtWaq7aJxAHDy1UWdl3PtD6Donef+D55Y6hp8y08YP39AWbXN7e/GJwW/QlBaCOmMtOSgjVwW0UA==}
     engines: {node: '>=24.0.0'}
     peerDependencies:
       serialport: '>=12.0.0'
@@ -2106,7 +2103,7 @@ snapshots:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
 
-  '@thermal-label/transport@0.2.1(usb@2.17.0)':
+  '@thermal-label/transport@0.2.2(usb@2.17.0)':
     dependencies:
       '@thermal-label/contracts': 0.2.0
     optionalDependencies:
