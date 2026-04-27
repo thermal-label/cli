@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@thermal-label/contracts': 0.2.0
+
 importers:
 
   .:
@@ -15,8 +18,8 @@ importers:
         specifier: '>=0.0.1'
         version: 0.0.1
       '@thermal-label/contracts':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: 0.2.0
+        version: 0.2.0
       '@thermal-label/labelmanager-node':
         specifier: '>=0.0.1'
         version: 0.0.1
@@ -24,8 +27,8 @@ importers:
         specifier: '>=0.0.1'
         version: 0.0.1
       '@thermal-label/transport':
-        specifier: ^0.1.0
-        version: 0.1.0(usb@2.17.0)
+        specifier: ^0.2.1
+        version: 0.2.1(usb@2.17.0)
       chalk:
         specifier: ^5.3.0
         version: 5.6.2
@@ -334,6 +337,10 @@ packages:
     resolution: {integrity: sha512-Mfmw2s97d8B1gkqkUUN0E69cF+ZfFXDOJOvGbhC5XbRu04PEoItHhPI3J85w2FKHRyDX/96xErfohFil36dprg==}
     engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
 
+  '@mbtech-nl/bitmap@1.2.0':
+    resolution: {integrity: sha512-P5UfR/PXM6CQcQ5WA5kEVl0P+ZgVxQPCKR2bGdP01a4p/ycn8fMBoiwM7j5Ng1LoPW+CcnRRr0kUy9vF56U/Pw==}
+    engines: {node: '>=24.0.0', pnpm: '>=9.0.0'}
+
   '@mbtech-nl/eslint-config@1.0.1':
     resolution: {integrity: sha512-YXjxS8qC8zl4zC8TD5pD/XLMY3eYldt04lq5YeczLtljBDsvWbqXBmeEbTCQtWFNkDWGwtScbF9G5PHzvIYOCQ==}
     engines: {node: '>=24.0.0'}
@@ -564,8 +571,8 @@ packages:
     resolution: {integrity: sha512-+1a6GADju2bUCN4BFnli2tu1lrkShu+UipC+91fU452LJ9MiniI/rVMJEcISH2aFebGXiXkMLCfMYsi2GEZDPg==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/contracts@0.1.0':
-    resolution: {integrity: sha512-lsOANRR2/YLNO92dfJqypuc8sIkKFg3IELgcetF8S/dGNIuGwQstfuCa/Xqp+h1Nh1LtSuMiEzw+xdHN5Ix+oQ==}
+  '@thermal-label/contracts@0.2.0':
+    resolution: {integrity: sha512-EqruuizBc8bgZwthZYir9f4t9YWWajMncTOn2+qkWPyxq/z3vU8giIcB4oYfQy7KYcltK0t8L5HKQJrCyvO5zw==}
 
   '@thermal-label/labelmanager-core@0.0.1':
     resolution: {integrity: sha512-NfFQcV3mq3EGsEP4rQC7/sZsOz/Xm5Ta1/M3eLgvTjbKIqLK4UmloaF/gZ385hJhcB0lBQMMo89AUxnhV0OaTQ==}
@@ -583,12 +590,15 @@ packages:
     resolution: {integrity: sha512-gDyK0PTf6XvWDXa9iN/wkBliphNgl+5fPNgdUQ8MRoaBa25vZEI6YEUtdBnEesa9w7pnJbd+ZGOCmq5gtvNbJg==}
     engines: {node: '>=24.0.0'}
 
-  '@thermal-label/transport@0.1.0':
-    resolution: {integrity: sha512-bBXuGg7yrOuGm1VWpM6PuutMmCDmt/Vh/0zWxuEkzmEKa5ywyoipnn2LxZ60qKniCzn1d2/fYS/8Pth1nybO+g==}
+  '@thermal-label/transport@0.2.1':
+    resolution: {integrity: sha512-2rHBfDXQMA+9P9tpCcG7WqlbYrrqMxar4wdYL9ao3LMXla3R/iyeztuorm5JR3w41yRp4CSXOEKnTfBL1PE90A==}
     engines: {node: '>=24.0.0'}
     peerDependencies:
+      serialport: '>=12.0.0'
       usb: '>=2.14.0'
     peerDependenciesMeta:
+      serialport:
+        optional: true
       usb:
         optional: true
 
@@ -1902,6 +1912,8 @@ snapshots:
 
   '@mbtech-nl/bitmap@1.0.1': {}
 
+  '@mbtech-nl/bitmap@1.2.0': {}
+
   '@mbtech-nl/eslint-config@1.0.1(@typescript-eslint/utils@8.59.0(eslint@9.39.4)(typescript@5.5.4))(eslint@9.39.4)(typescript@5.5.4)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.59.0(@typescript-eslint/parser@8.59.0(eslint@9.39.4)(typescript@5.5.4))(eslint@9.39.4)(typescript@5.5.4)
@@ -2068,9 +2080,9 @@ snapshots:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
 
-  '@thermal-label/contracts@0.1.0':
+  '@thermal-label/contracts@0.2.0':
     dependencies:
-      '@mbtech-nl/bitmap': 1.0.1
+      '@mbtech-nl/bitmap': 1.2.0
 
   '@thermal-label/labelmanager-core@0.0.1':
     dependencies:
@@ -2094,9 +2106,9 @@ snapshots:
     optionalDependencies:
       '@napi-rs/canvas': 0.1.99
 
-  '@thermal-label/transport@0.1.0(usb@2.17.0)':
+  '@thermal-label/transport@0.2.1(usb@2.17.0)':
     dependencies:
-      '@thermal-label/contracts': 0.1.0
+      '@thermal-label/contracts': 0.2.0
     optionalDependencies:
       usb: 2.17.0
 

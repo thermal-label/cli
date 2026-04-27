@@ -76,3 +76,13 @@ Tracks completion of the steps in `PLAN.md` §10.
 - [x] `pnpm test:coverage` — thresholds pass (95/84/81/95)
 - [x] Verify all PROGRESS.md checkboxes ticked
 - [x] Commit
+
+## Step N — MediaDescriptor refactor
+
+> Plan: [../brother-ql/MEDIA_DESCRIPTOR_REFACTOR.md](../brother-ql/MEDIA_DESCRIPTOR_REFACTOR.md)
+
+- [x] Bump `@thermal-label/contracts` to `^0.2.0`
+- [x] `status` command formats `media.palette.length`-colour instead of `colorCapable`
+- [x] Test fixtures drop `colorCapable: false` (`status.test.ts`, `print-text.test.ts`, `print-image.test.ts`)
+- [x] Gates green (typecheck, lint, format, test, build)
+

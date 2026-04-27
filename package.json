@@ -64,8 +64,8 @@
   "prettier": "@mbtech-nl/prettier-config",
   "dependencies": {
     "@mbtech-nl/bitmap": "^1.0.1",
-    "@thermal-label/contracts": "^0.1.0",
-    "@thermal-label/transport": "^0.1.0",
+    "@thermal-label/contracts": "^0.2.0",
+    "@thermal-label/transport": "^0.2.1",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "jpeg-js": "^0.4.4",
@@ -98,5 +98,10 @@
     "prettier": "^3.0.0",
     "typescript": "~5.5.0",
     "vitest": "^2.1.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@thermal-label/contracts": "0.2.0"
+    }
   }
 }

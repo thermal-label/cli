@@ -77,7 +77,11 @@ function formatMedia(mediaLoaded: boolean, media?: MediaDescriptor): string {
   const parts: string[] = [media.name];
   const details: string[] = [`${media.widthMm.toString()}mm`, media.type];
   if (media.heightMm !== undefined) details.push(`${media.heightMm.toString()}mm`);
-  if (media.colorCapable) details.push('two-colour');
+  if (media.palette) {
+    details.push(
+      media.palette.length === 2 ? 'two-colour' : `${media.palette.length.toString()}-colour`,
+    );
+  }
   parts.push(`(${details.join(', ')})`);
   return parts.join(' ');
 }

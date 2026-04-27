@@ -78,7 +78,6 @@ const stdMedia: MediaDescriptor = {
   name: '62mm continuous',
   widthMm: 62,
   type: 'continuous',
-  colorCapable: false,
 };
 
 beforeEach(() => {
