@@ -48,7 +48,7 @@ production-oriented workflow.
 
 | | |
 |---|---|
-| Runtime | Node ≥ 24 |
+| Runtime | Node ≥ 20.9 (Node 24 LTS recommended) |
 | Drivers | Auto-detects any installed `@thermal-label/*-node` driver with a `discovery` export |
 | License | MIT |
 

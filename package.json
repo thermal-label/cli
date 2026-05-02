@@ -40,7 +40,7 @@
     "thermal-label": "./bin/thermal-label.js"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=20.9.0"
   },
   "publishConfig": {
     "access": "public"
