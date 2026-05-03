@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type {
+  DeviceEntry,
   DiscoveredPrinter,
   OpenOptions,
   PrinterAdapter,
@@ -20,6 +21,17 @@ interface MockPrinterInit {
   status: PrinterStatus;
 }
 
+function mockDevice(name: string, family: string): DeviceEntry {
+  return {
+    key: name.replaceAll(/\W+/g, '_').toUpperCase(),
+    name,
+    family,
+    transports: {},
+    engines: [],
+    support: { status: 'untested' },
+  };
+}
+
 function mockDiscovery(init: MockPrinterInit[]): {
   discovery: PrinterDiscovery;
   adapters: PrinterAdapter[];
@@ -37,7 +49,7 @@ function mockDiscovery(init: MockPrinterInit[]): {
       Promise.resolve(
         init.map(p => {
           const dp: DiscoveredPrinter = {
-            device: { name: p.name, family: p.family, transports: [p.transport ?? 'usb'] },
+            device: mockDevice(p.name, p.family),
             transport: p.transport ?? 'usb',
             connectionId: p.connectionId ?? 'mock',
           };
@@ -257,7 +269,7 @@ describe('status command', () => {
       listPrinters: (): Promise<DiscoveredPrinter[]> =>
         Promise.resolve([
           {
-            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            device: mockDevice('QL-820NWB', 'brother-ql'),
             transport: 'usb',
             connectionId: 'mock',
           },
@@ -296,7 +308,7 @@ describe('status command', () => {
       listPrinters: (): Promise<DiscoveredPrinter[]> =>
         Promise.resolve([
           {
-            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            device: mockDevice('QL-820NWB', 'brother-ql'),
             transport: 'usb',
             connectionId: 'mock',
           },

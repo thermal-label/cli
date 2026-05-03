@@ -1,4 +1,4 @@
-import type { PrinterDiscovery } from '@thermal-label/contracts';
+import type { DiscoveredPrinter, PrinterDiscovery } from '@thermal-label/contracts';
 
 export const KNOWN_DRIVERS = [
   '@thermal-label/brother-ql-node',
@@ -52,6 +52,17 @@ export async function loadDrivers(
     }
   }
   return drivers;
+}
+
+export async function discoverAll(
+  discoveries: readonly PrinterDiscovery[],
+): Promise<DiscoveredPrinter[]> {
+  const results = await Promise.allSettled(discoveries.map(d => d.listPrinters()));
+  const combined: DiscoveredPrinter[] = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') combined.push(...r.value);
+  }
+  return combined;
 }
 
 export async function listDriverStatus(

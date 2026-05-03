@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DiscoveredPrinter, PrinterDiscovery } from '@thermal-label/contracts';
+import type { DeviceEntry, DiscoveredPrinter, PrinterDiscovery } from '@thermal-label/contracts';
 
 import { listCommand } from '../commands/list.js';
 
@@ -11,13 +11,24 @@ interface MockPrinter {
   connectionId: string;
 }
 
+function mockDevice(p: MockPrinter): DeviceEntry {
+  return {
+    key: p.name.replaceAll(/\W+/g, '_').toUpperCase(),
+    name: p.name,
+    family: p.family,
+    transports: {},
+    engines: [],
+    support: { status: 'untested' },
+  };
+}
+
 function mockDiscovery(family: string, printers: MockPrinter[]): PrinterDiscovery {
   return {
     family,
     listPrinters: (): Promise<DiscoveredPrinter[]> =>
       Promise.resolve(
         printers.map(p => ({
-          device: { name: p.name, family: p.family, transports: [p.transport] },
+          device: mockDevice(p),
           transport: p.transport,
           connectionId: p.connectionId,
         })),

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type {
+  DeviceEntry,
   DiscoveredPrinter,
   MediaDescriptor,
   PrinterAdapter,
@@ -58,13 +59,22 @@ function mockAdapter(detectedMedia?: MediaDescriptor, throwOnPrint?: Error): Moc
   };
 }
 
+const ql820Device: DeviceEntry = {
+  key: 'QL_820NWB',
+  name: 'QL-820NWB',
+  family: 'brother-ql',
+  transports: {},
+  engines: [],
+  support: { status: 'untested' },
+};
+
 function mockDiscovery(mock: MockAdapter): PrinterDiscovery {
   return {
     family: 'brother-ql',
     listPrinters: (): Promise<DiscoveredPrinter[]> =>
       Promise.resolve([
         {
-          device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+          device: ql820Device,
           transport: 'usb',
           connectionId: 'Bus 003 Device 010',
         },
@@ -204,7 +214,7 @@ describe('print text command', () => {
       listPrinters: (): Promise<DiscoveredPrinter[]> =>
         Promise.resolve([
           {
-            device: { name: 'QL-820NWB', family: 'brother-ql', transports: ['usb'] },
+            device: ql820Device,
             transport: 'usb',
             connectionId: 'mock',
           },

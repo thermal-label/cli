@@ -1,8 +1,7 @@
-import { discoverAll } from '@thermal-label/transport';
-
 import type { DiscoveredPrinter, OpenOptions } from '@thermal-label/contracts';
 
 import {
+  discoverAll,
   KNOWN_DRIVERS,
   loadDrivers,
   type DynamicImporter,

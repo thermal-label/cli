@@ -1,10 +1,9 @@
 import chalk from 'chalk';
 
-import { discoverAll } from '@thermal-label/transport';
-
 import type { DiscoveredPrinter } from '@thermal-label/contracts';
 
 import {
+  discoverAll,
   KNOWN_DRIVERS,
   listDriverStatus,
   loadDrivers,
