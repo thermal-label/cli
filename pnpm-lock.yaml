@@ -35,6 +35,9 @@ importers:
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
+      usb:
+        specifier: ^2.14.0
+        version: 2.17.0
     devDependencies:
       '@mbtech-nl/eslint-config':
         specifier: ^1.1.0
