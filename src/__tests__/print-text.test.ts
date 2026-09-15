@@ -306,4 +306,62 @@ describe('print text: --media and status failures', () => {
     expect(lines.some(l => l.includes('does not expose a media catalog'))).toBe(true);
     expect(process.exitCode).toBe(1);
   });
+
+  it('exits with the driver message when getStatus fails and no --media was given', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = () => Promise.reject(new Error('no SNMP answer from 10.0.0.9'));
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', { importer: importerFor(discovery), out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('Status query failed: no SNMP answer from 10.0.0.9'))).toBe(
+      true,
+    );
+    expect(lines.some(l => l.includes('--media <id>'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(0);
+    expect(mock.closeCalls).toBe(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns and prints when getStatus fails but --media was given', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = () => Promise.reject(new Error('no SNMP answer from 10.0.0.9'));
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(lines.some(l => l.includes('Warning: status query failed (no SNMP answer'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(1);
+    expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('surfaces status error rows and warn details as warnings and still prints', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = (): Promise<PrinterStatus> =>
+      Promise.resolve({
+        ready: true,
+        mediaLoaded: true,
+        detectedMedia: stdMedia,
+        errors: [{ code: 'low_media', message: 'Roll nearly out' }],
+        rawBytes: new Uint8Array(),
+        details: [
+          { label: 'Printer state', value: 'idle' },
+          { label: 'Two-colour', value: 'not detectable over network', severity: 'warn' },
+        ],
+      });
+    const discovery = discoveryWith(mock.adapter);
+    const lines: string[] = [];
+    await printTextCommand('X', { importer: importerFor(discovery), out: s => lines.push(s) });
+    expect(
+      lines.some(l => l.includes('Warning: printer reports [low_media] Roll nearly out')),
+    ).toBe(true);
+    expect(lines.some(l => l.includes('Warning: Two-colour: not detectable over network'))).toBe(
+      true,
+    );
+    expect(lines.some(l => l.includes('Printer state'))).toBe(false);
+    expect(mock.printCalls).toHaveLength(1);
+  });
 });

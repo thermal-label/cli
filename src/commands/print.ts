@@ -38,12 +38,28 @@ export async function runPrint(
     let media: MediaDescriptor | undefined;
     if (options.media !== undefined) media = resolveMedia(driver, options.media);
 
-    // Warm the adapter's media cache so print() can default to detected media.
+    // The status query warms the driver's media cache so print() can
+    // default to detected media, and surfaces error rows. Without
+    // --media a failure here means the job cannot be sized, so stop.
     try {
-      await printer.getStatus();
-    } catch {
-      // Ignore — with --media the job is sized anyway; without it the
-      // driver raises MediaNotSpecifiedError below.
+      const status = await printer.getStatus();
+      for (const e of status.errors) {
+        out(chalk.yellow(`Warning: printer reports [${e.code}] ${e.message}`));
+      }
+      for (const d of status.details ?? []) {
+        if (d.severity === 'warn' || d.severity === 'error') {
+          out(chalk.yellow(`Warning: ${d.label}: ${d.value}`));
+        }
+      }
+    } catch (err) {
+      const message = errorMessage(err);
+      if (media === undefined) {
+        out(chalk.red(`Status query failed: ${message}`));
+        out(chalk.red('Pass --media <id> to print without media detection.'));
+        process.exitCode = 1;
+        return;
+      }
+      out(chalk.yellow(`Warning: status query failed (${message}); printing with --media.`));
     }
 
     const copies = options.copies ?? 1;
