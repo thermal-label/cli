@@ -188,14 +188,16 @@ fail, and then it prints each driver's reason:
 ```
 $ thermal-label status --host 192.168.1.67
 No installed driver could open 192.168.1.67:
-  brother-ql: no SNMP answer from 192.168.1.67; pass deviceKey, and media, since status is unavailable too
+  brother-ql: No SNMP answer from 192.168.1.67 (Read timed out after 2000ms); the model cannot be identified and status is unavailable, so pass media too. Pass deviceKey, one of: PT_E550W, PT_P750W, …, QL_820NWBc.
     candidates (key  name):
-      QL_820NWBc  QL-820NWBc
       PT_E550W    PT-E550W
+      PT_P750W    PT-P750W
       …
+      QL_820NWBc  QL-820NWBc
     copy, swapping the key for your model:
-      thermal-label status --host 192.168.1.67 --printer brother-ql --device QL_820NWBc --media <id>
-  labelwriter: TCP open requires `deviceKey` — port 9100 carries no model signal, …
+      thermal-label status --host 192.168.1.67 --printer brother-ql --device PT_E550W --media <id>
+  labelwriter: TCP open requires `deviceKey` — port 9100 carries no model signal, so the model must be declared. Available TCP-capable LabelWriter keys: LW_550_TURBO, LW_5XL, LW_WIRELESS.
+  labelmanager: No compatible device found
 
 Pass --printer <family> to see one driver's error, or --device <key> to name the model.
 ```
