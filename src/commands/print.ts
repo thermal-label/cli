@@ -41,6 +41,9 @@ export async function runPrint(
     // The status query warms the driver's media cache so print() can
     // default to detected media, and surfaces error rows. Without
     // --media a failure here means the job cannot be sized, so stop.
+    // With --media the job still goes out, but blind: the channel a
+    // driver would confirm the print on (SNMP) is the one that failed.
+    const printOpts: PrintOptions = {};
     try {
       const status = await printer.getStatus();
       for (const e of status.errors) {
@@ -59,11 +62,15 @@ export async function runPrint(
         process.exitCode = 1;
         return;
       }
-      out(chalk.yellow(`Warning: status query failed (${message}); printing with --media.`));
+      out(
+        chalk.yellow(
+          `Warning: status query failed (${message}); printing with --media, without print confirmation.`,
+        ),
+      );
+      printOpts.confirm = false;
     }
 
     const copies = options.copies ?? 1;
-    const printOpts: PrintOptions = {};
     if (options.density !== undefined) printOpts.density = options.density;
     for (let i = 0; i < copies; i++) {
       await printer.print(image, media, printOpts);

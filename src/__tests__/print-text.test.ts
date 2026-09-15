@@ -333,8 +333,24 @@ describe('print text: --media and status failures', () => {
       media: '259',
     });
     expect(lines.some(l => l.includes('Warning: status query failed (no SNMP answer'))).toBe(true);
+    expect(lines.some(l => l.includes('without print confirmation'))).toBe(true);
     expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).toEqual({ confirm: false });
     expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not touch confirm when the status query succeeds', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).not.toHaveProperty('confirm');
     expect(process.exitCode).toBe(0);
   });
 
