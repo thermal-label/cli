@@ -155,6 +155,24 @@ describe('selectPrinter with --host', () => {
     expect(msg).toContain('--printer <family>');
   });
 
+  it('renders candidates for an identification error from another contracts copy (name match)', async () => {
+    const foreign = Object.assign(new Error('no SNMP answer from 10.0.0.9'), {
+      name: 'DeviceIdentificationRequiredError',
+      candidates: [QL],
+      continueWith: () => Promise.reject(new Error('not used')),
+    });
+    const brotherQl = fakeDriver('brother-ql', () => {
+      throw foreign;
+    });
+    const importer = importerFor({ 'brother-ql': brotherQl });
+
+    const err = await failure(selectPrinter({ host: '10.0.0.9', invocation: 'status' }, importer));
+    expect(err.message).toMatch(/QL_820NWBc\s+QL-820NWBc/);
+    expect(err.message).toContain(
+      'thermal-label status --host 10.0.0.9 --printer brother-ql --device QL_820NWBc --media <id>',
+    );
+  });
+
   it('omits --media from the copy line when the driver identified the model as unknown', async () => {
     const idErr = new DeviceIdentificationRequiredError([QL], () =>
       Promise.reject(new Error('not used')),

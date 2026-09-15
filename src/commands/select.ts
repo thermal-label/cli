@@ -4,7 +4,10 @@ import type {
   OpenOptions,
   PrinterAdapter,
 } from '@thermal-label/contracts';
-import { DeviceIdentificationRequiredError } from '@thermal-label/contracts';
+import {
+  DeviceIdentificationRequiredError,
+  MediaNotSpecifiedError,
+} from '@thermal-label/contracts';
 
 import {
   discoverAll,
@@ -212,7 +215,7 @@ function formatDeclines(
   ];
   for (const { family, error } of declines) {
     lines.push(`  ${family}: ${errorMessage(error)}`);
-    if (error instanceof DeviceIdentificationRequiredError) {
+    if (isContractsError(error, 'DeviceIdentificationRequiredError')) {
       lines.push(...formatIdentificationHint(family, error, selector));
     }
   }
@@ -253,4 +256,29 @@ const STATUS_UNAVAILABLE = /no SNMP answer|status is unavailable/i;
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+type ContractsErrorName = 'DeviceIdentificationRequiredError' | 'MediaNotSpecifiedError';
+type ContractsErrorOf<N extends ContractsErrorName> = N extends 'DeviceIdentificationRequiredError'
+  ? DeviceIdentificationRequiredError
+  : MediaNotSpecifiedError;
+
+/**
+ * `instanceof` only holds when the CLI and the driver load the same
+ * `@thermal-label/contracts` module; with npm hoisting quirks or a
+ * nested copy they do not. The contracts classes all set `name`, so
+ * match on that as well.
+ */
+export function isContractsError<N extends ContractsErrorName>(
+  error: unknown,
+  name: N,
+): error is ContractsErrorOf<N> {
+  if (!(error instanceof Error)) return false;
+  if (name === 'DeviceIdentificationRequiredError') {
+    return (
+      error instanceof DeviceIdentificationRequiredError ||
+      (error.name === name && Array.isArray((error as { candidates?: unknown }).candidates))
+    );
+  }
+  return error instanceof MediaNotSpecifiedError || error.name === name;
 }
