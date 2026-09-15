@@ -11,6 +11,8 @@ import {
   type DynamicImporter,
 } from '../discovery.js';
 
+import { NO_PRINTERS_HINT } from './select.js';
+
 export type OutFn = (line: string) => void;
 
 export interface ListCommandOptions {
@@ -53,10 +55,13 @@ export async function listCommand(options: ListCommandOptions = {}): Promise<voi
 }
 
 function printPrinterTable(out: OutFn, printers: readonly DiscoveredPrinter[]): void {
-  const header = ['Family', 'Model', 'Transport', 'Connection'];
+  const header = ['Family', 'Model', 'Transport', 'Connection', 'Serial'];
   const rows = [header];
   for (const p of printers) {
-    rows.push([p.device.family, p.device.name, p.transport, p.connectionId]);
+    // Network rows carry host/port; connectionId stays opaque for the rest.
+    const connection =
+      p.host === undefined ? p.connectionId : `${p.host}:${(p.port ?? 9100).toString()}`;
+    rows.push([p.device.family, p.device.name, p.transport, connection, p.serialNumber ?? '']);
   }
   const widths = header.map((_, col) => Math.max(...rows.map(r => (r[col] ?? '').length)));
   for (const [i, row] of rows.entries()) {
@@ -105,10 +110,9 @@ function printNoDriversInstalled(out: OutFn): void {
 }
 
 function printNoPrintersFound(out: OutFn, families: readonly string[]): void {
-  out('No printers found.');
+  out(NO_PRINTERS_HINT);
   out('');
   out(`Installed drivers: ${families.join(', ')}`);
-  out('Make sure your printer is connected via USB or accessible via TCP.');
 }
 
 function defaultOut(line: string): void {

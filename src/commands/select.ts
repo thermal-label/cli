@@ -47,8 +47,8 @@ export class SelectionError extends Error {
   }
 }
 
-const NO_PRINTERS_HINT =
-  'No printers found. Make sure your printer is connected via USB or accessible via TCP.';
+export const NO_PRINTERS_HINT =
+  'No printers found. USB: check the cable and permissions. Network: the scan uses SNMP broadcast; on another subnet or with SNMP disabled pass --host <ip>.';
 
 interface Decline {
   family: string;

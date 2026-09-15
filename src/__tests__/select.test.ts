@@ -279,6 +279,12 @@ describe('selectPrinter via discovery', () => {
     expect(err.message).toContain('labelwriter: USB permission denied');
     expect(err.message).not.toContain('--printer <family>');
   });
+
+  it('uses the network hint when nothing is found', async () => {
+    const brotherQl = fakeDriver('brother-ql', () => adapter('brother-ql', 'x'));
+    const err = await failure(selectPrinter({}, importerFor({ 'brother-ql': brotherQl })));
+    expect(err.message).toMatch(/^No printers found\. USB: .*SNMP broadcast.*--host <ip>/);
+  });
 });
 
 describe('resolveMedia', () => {
