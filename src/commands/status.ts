@@ -18,7 +18,7 @@ export async function statusCommand(options: StatusCommandOptions = {}): Promise
 
   let selection;
   try {
-    selection = await selectPrinter(options, options.importer);
+    selection = await selectPrinter({ invocation: 'status', ...options }, options.importer);
   } catch (err) {
     if (err instanceof SelectionError) {
       out(chalk.red(err.message));
@@ -28,15 +28,7 @@ export async function statusCommand(options: StatusCommandOptions = {}): Promise
     throw err;
   }
 
-  let printer: PrinterAdapter;
-  try {
-    printer = await selection.driver.discovery.openPrinter(selection.openOptions);
-  } catch (err) {
-    out(chalk.red(`Failed to open printer: ${err instanceof Error ? err.message : String(err)}`));
-    process.exitCode = 1;
-    return;
-  }
-
+  const { printer } = selection;
   try {
     const explicitMedia =
       options.media === undefined ? undefined : resolveMedia(selection.driver, options.media);

@@ -4,7 +4,7 @@ import type { DynamicImporter } from '../discovery.js';
 import { renderTextLabel, type TextOptions } from '../render.js';
 
 import { runPrint, type OutFn } from './print.js';
-import { errorMessage, selectPrinter, SelectionError, type PrinterSelector } from './select.js';
+import { selectPrinter, SelectionError, type PrinterSelector } from './select.js';
 
 export type { OutFn } from './print.js';
 
@@ -21,9 +21,15 @@ export async function printTextCommand(
 ): Promise<void> {
   const out = options.out ?? defaultOut;
 
+  // Render before opening so a bad label never touches the printer.
+  const image = renderTextLabel(text, options);
+
   let selection;
   try {
-    selection = await selectPrinter(options, options.importer);
+    selection = await selectPrinter(
+      { invocation: `print text ${JSON.stringify(text)}`, ...options },
+      options.importer,
+    );
   } catch (err) {
     if (err instanceof SelectionError) {
       out(chalk.red(err.message));
@@ -33,18 +39,7 @@ export async function printTextCommand(
     throw err;
   }
 
-  const image = renderTextLabel(text, options);
-
-  let printer;
-  try {
-    printer = await selection.driver.discovery.openPrinter(selection.openOptions);
-  } catch (err) {
-    out(chalk.red(`Failed to open printer: ${errorMessage(err)}`));
-    process.exitCode = 1;
-    return;
-  }
-
-  await runPrint(out, selection.driver, printer, image, options);
+  await runPrint(out, selection.driver, selection.printer, image, options);
 }
 
 function defaultOut(line: string): void {

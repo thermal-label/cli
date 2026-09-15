@@ -1,4 +1,10 @@
-import type { DiscoveredPrinter, MediaDescriptor, OpenOptions } from '@thermal-label/contracts';
+import type {
+  DiscoveredPrinter,
+  MediaDescriptor,
+  OpenOptions,
+  PrinterAdapter,
+} from '@thermal-label/contracts';
+import { DeviceIdentificationRequiredError } from '@thermal-label/contracts';
 
 import {
   discoverAll,
@@ -19,10 +25,18 @@ export interface PrinterSelector {
   media?: string;
   /** `--community`: SNMP community, forwarded as `OpenOptions.snmpCommunity`. */
   community?: string;
+  /**
+   * The command as the user typed it, without selection flags
+   * (`status`, `print text "hi"`). Used to render a copy-pasteable
+   * invocation when a driver asks for `--device`.
+   */
+  invocation?: string;
 }
 
 export interface SelectionResult {
   driver: LoadedDriver;
+  /** Already opened; the caller owns `close()`. */
+  printer: PrinterAdapter;
   openOptions: OpenOptions;
 }
 
@@ -33,16 +47,18 @@ export class SelectionError extends Error {
   }
 }
 
+const NO_PRINTERS_HINT =
+  'No printers found. Make sure your printer is connected via USB or accessible via TCP.';
+
+interface Decline {
+  family: string;
+  error: unknown;
+}
+
 export async function selectPrinter(
   selector: PrinterSelector,
   importer?: DynamicImporter,
 ): Promise<SelectionResult> {
-  if (selector.host !== undefined && selector.printer === undefined) {
-    throw new SelectionError(
-      'Specify --printer <family> when using --host; the CLI cannot infer which driver speaks to an arbitrary IP.',
-    );
-  }
-
   const drivers = await loadDrivers(KNOWN_DRIVERS, importer);
   if (drivers.length === 0) {
     throw new SelectionError(
@@ -62,14 +78,7 @@ export async function selectPrinter(
   }
 
   if (selector.host !== undefined) {
-    const opts: OpenOptions = { host: selector.host };
-    if (selector.port !== undefined) opts.port = selector.port;
-    if (selector.serial !== undefined) opts.serialNumber = selector.serial;
-    if (selector.device !== undefined) opts.deviceKey = selector.device;
-    if (selector.community !== undefined) opts.snmpCommunity = selector.community;
-    const [driver] = filtered;
-    if (!driver) throw new SelectionError('Internal: no driver after filter.');
-    return { driver, openOptions: opts };
+    return openByHost({ ...selector, host: selector.host }, filtered);
   }
 
   const discovered = await discoverAll(filtered.map(d => d.discovery));
@@ -81,7 +90,7 @@ export async function selectPrinter(
   if (matched.length === 0) {
     throw new SelectionError(
       selector.serial === undefined
-        ? 'No printers found. Make sure your printer is connected via USB or accessible via TCP.'
+        ? NO_PRINTERS_HINT
         : `No printer found with serial number '${selector.serial}'.`,
     );
   }
@@ -101,9 +110,56 @@ export async function selectPrinter(
 
   const opts: OpenOptions = {};
   if (picked.serialNumber !== undefined) opts.serialNumber = picked.serialNumber;
+  if (picked.host !== undefined) {
+    // Network result: re-open by address with the key discovery already
+    // resolved, so the driver does not identify a second time.
+    opts.host = picked.host;
+    if (picked.port !== undefined) opts.port = picked.port;
+    opts.deviceKey = selector.device ?? picked.device.key;
+  } else if (selector.device !== undefined) {
+    opts.deviceKey = selector.device;
+  }
+  if (selector.community !== undefined) opts.snmpCommunity = selector.community;
+
+  const outcome = await tryOpen(driver, opts);
+  if (outcome.ok) return { driver, printer: outcome.printer, openOptions: opts };
+  throw new SelectionError(formatDeclines([outcome.decline], selector, false));
+}
+
+async function openByHost(
+  selector: PrinterSelector & { host: string },
+  drivers: readonly LoadedDriver[],
+): Promise<SelectionResult> {
+  const opts: OpenOptions = { host: selector.host };
+  if (selector.port !== undefined) opts.port = selector.port;
+  if (selector.serial !== undefined) opts.serialNumber = selector.serial;
   if (selector.device !== undefined) opts.deviceKey = selector.device;
   if (selector.community !== undefined) opts.snmpCommunity = selector.community;
-  return { driver, openOptions: opts };
+
+  // Sequential on purpose: at most one driver holds a 9100 socket, and a
+  // driver that throws before connecting never opens one. Every failure,
+  // typed or not, is a decline; the walk only fails when all drivers do.
+  const declines: Decline[] = [];
+  for (const driver of drivers) {
+    const outcome = await tryOpen(driver, opts);
+    if (outcome.ok) return { driver, printer: outcome.printer, openOptions: opts };
+    declines.push(outcome.decline);
+  }
+  throw new SelectionError(formatDeclines(declines, selector, selector.printer === undefined));
+}
+
+type OpenOutcome = { ok: true; printer: PrinterAdapter } | { ok: false; decline: Decline };
+
+async function tryOpen(driver: LoadedDriver, opts: OpenOptions): Promise<OpenOutcome> {
+  const family = driver.discovery.family;
+  try {
+    // `await` inside the try so a synchronous throw and a rejection land
+    // in the same catch.
+    const printer = await driver.discovery.openPrinter(opts);
+    return { ok: true, printer };
+  } catch (error: unknown) {
+    return { ok: false, decline: { family, error } };
+  }
 }
 
 /**
@@ -143,6 +199,57 @@ function formatMultiple(printers: readonly DiscoveredPrinter[]): string {
   lines.push('', 'Use --printer <family> or --serial <sn> to pick one.');
   return lines.join('\n');
 }
+
+function formatDeclines(
+  declines: readonly Decline[],
+  selector: PrinterSelector,
+  walked: boolean,
+): string {
+  const lines = [
+    walked
+      ? `No installed driver could open ${selector.host ?? ''}:`
+      : `Failed to open printer${selector.host === undefined ? '' : ` at ${selector.host}`}:`,
+  ];
+  for (const { family, error } of declines) {
+    lines.push(`  ${family}: ${errorMessage(error)}`);
+    if (error instanceof DeviceIdentificationRequiredError) {
+      lines.push(...formatIdentificationHint(family, error, selector));
+    }
+  }
+  if (walked) {
+    lines.push(
+      '',
+      "Pass --printer <family> to see one driver's error, or --device <key> to name the model.",
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatIdentificationHint(
+  family: string,
+  error: DeviceIdentificationRequiredError,
+  selector: PrinterSelector,
+): string[] {
+  const lines: string[] = [];
+  const keyWidth = Math.max(...error.candidates.map(c => c.key.length));
+  lines.push('    candidates (key  name):');
+  for (const c of error.candidates) {
+    lines.push(`      ${c.key.padEnd(keyWidth)}  ${c.name}`);
+  }
+  const [first] = error.candidates;
+  if (first === undefined) return lines;
+
+  const parts = ['thermal-label', selector.invocation ?? '<command>'];
+  if (selector.host !== undefined) parts.push(`--host ${selector.host}`);
+  if (selector.port !== undefined) parts.push(`--port ${selector.port.toString()}`);
+  parts.push(`--printer ${family}`, `--device ${first.key}`);
+  if (STATUS_UNAVAILABLE.test(error.message)) parts.push('--media <id>');
+  lines.push(`    copy, swapping the key for your model:`, `      ${parts.join(' ')}`);
+  return lines;
+}
+
+/** Driver messages that say status cannot be read either (no SNMP answer). */
+const STATUS_UNAVAILABLE = /no SNMP answer|status is unavailable/i;
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

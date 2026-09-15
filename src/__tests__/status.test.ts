@@ -209,18 +209,19 @@ describe('status command', () => {
     expect(lines.some(l => l.includes('LabelWriter 450'))).toBe(true);
   });
 
-  it('errors when --host is given without --printer', async () => {
+  it('walks the installed drivers when --host is given without --printer', async () => {
     const { out, lines } = collect();
-    const { discovery } = mockDiscovery([
+    const { discovery, openCalls } = mockDiscovery([
       { family: 'brother-ql', name: 'QL-820NWB', status: baseStatus() },
     ]);
     const importer = (pkg: string) =>
       pkg === '@thermal-label/brother-ql-node'
         ? Promise.resolve({ discovery })
         : Promise.reject(new Error('missing'));
-    await statusCommand({ importer, out, host: '192.168.1.42' });
-    expect(lines.some(l => l.includes('--printer') && l.includes('--host'))).toBe(true);
-    expect(process.exitCode).toBe(1);
+    await statusCommand({ importer, out, host: '192.168.1.42', community: 'lab' });
+    expect(openCalls).toEqual([{ host: '192.168.1.42', snmpCommunity: 'lab' }]);
+    expect(lines.some(l => l.includes('QL-820NWB'))).toBe(true);
+    expect(process.exitCode).toBe(0);
   });
 
   it('renders status details rows, warnings in place', async () => {
