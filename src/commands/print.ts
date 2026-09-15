@@ -1,7 +1,5 @@
 import chalk from 'chalk';
 
-import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-
 import type {
   MediaDescriptor,
   PrinterAdapter,
@@ -11,7 +9,7 @@ import type {
 
 import type { LoadedDriver } from '../discovery.js';
 
-import { errorMessage, resolveMedia, SelectionError } from './select.js';
+import { errorMessage, isContractsError, resolveMedia, SelectionError } from './select.js';
 
 export type OutFn = (line: string) => void;
 
@@ -20,6 +18,8 @@ export interface PrintRunOptions {
   copies?: number;
   /** `--media`: overrides detected media; also lets a failed status query through. */
   media?: string;
+  /** `--no-confirm`: send blind even when the status query succeeded. */
+  confirm?: false;
 }
 
 /**
@@ -44,6 +44,7 @@ export async function runPrint(
     // With --media the job still goes out, but blind: the channel a
     // driver would confirm the print on (SNMP) is the one that failed.
     const printOpts: PrintOptions = {};
+    if (options.confirm === false) printOpts.confirm = false;
     try {
       const status = await printer.getStatus();
       for (const e of status.errors) {
@@ -82,7 +83,7 @@ export async function runPrint(
       process.exitCode = 1;
       return;
     }
-    if (err instanceof MediaNotSpecifiedError) {
+    if (isContractsError(err, 'MediaNotSpecifiedError')) {
       out(
         chalk.red(
           'No media is loaded or detected. Load media, pass --media <id>, or use a driver with media auto-detection (e.g. Brother QL).',

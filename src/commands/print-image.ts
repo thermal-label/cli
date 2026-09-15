@@ -11,6 +11,8 @@ export type { OutFn } from './print.js';
 export interface PrintImageCommandOptions extends PrinterSelector, ImageOptions {
   density?: string;
   copies?: number;
+  /** `--no-confirm`: skip the driver's out-of-band print confirmation. */
+  confirm?: false;
   importer?: DynamicImporter;
   readFileFn?: ReadFileFn;
   out?: OutFn;

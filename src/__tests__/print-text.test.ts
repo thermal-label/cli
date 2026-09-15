@@ -197,6 +197,20 @@ describe('print text command', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('recognises a MediaNotSpecifiedError from another contracts copy by name', async () => {
+    const foreign = new Error('no media');
+    foreign.name = 'MediaNotSpecifiedError';
+    const mock = mockAdapter(undefined, foreign);
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery: mockDiscovery(mock) })
+        : Promise.reject(new Error('missing'));
+    const lines: string[] = [];
+    await printTextCommand('X', { importer, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('No media'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+
   it('errors cleanly when no printer is found', async () => {
     const importer = (pkg: string) => {
       void pkg;
@@ -337,6 +351,21 @@ describe('print text: --media and status failures', () => {
     expect(mock.printCalls).toHaveLength(1);
     expect(mock.printCalls[0]?.options).toEqual({ confirm: false });
     expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('--no-confirm sends blind even when the status query succeeds', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      confirm: false,
+    });
+    expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).toEqual({ confirm: false });
     expect(process.exitCode).toBe(0);
   });
 

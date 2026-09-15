@@ -39,6 +39,8 @@ interface CommanderPrintTextOpts extends CommanderStatusOpts {
   scaleY?: number;
   density?: string;
   copies?: number;
+  /** commander negatable `--no-confirm`: `true` unless the flag is given. */
+  confirm?: boolean;
 }
 
 interface CommanderPrintImageOpts extends CommanderStatusOpts {
@@ -48,6 +50,7 @@ interface CommanderPrintImageOpts extends CommanderStatusOpts {
   rotate?: 0 | 90 | 180 | 270;
   density?: string;
   copies?: number;
+  confirm?: boolean;
 }
 
 function buildStatusOptions(opts: CommanderStatusOpts): StatusCommandOptions {
@@ -69,6 +72,7 @@ function buildPrintTextOptions(opts: CommanderPrintTextOpts): PrintTextCommandOp
   if (opts.scaleY !== undefined) out.scaleY = opts.scaleY;
   if (opts.density !== undefined) out.density = opts.density;
   if (opts.copies !== undefined) out.copies = opts.copies;
+  if (opts.confirm === false) out.confirm = false;
   return out;
 }
 
@@ -80,6 +84,7 @@ function buildPrintImageOptions(opts: CommanderPrintImageOpts): PrintImageComman
   if (opts.rotate !== undefined) out.rotate = opts.rotate;
   if (opts.density !== undefined) out.density = opts.density;
   if (opts.copies !== undefined) out.copies = opts.copies;
+  if (opts.confirm === false) out.confirm = false;
   return out;
 }
 
@@ -129,6 +134,10 @@ export function buildProgram(): Command {
     .option('--scale-y <n>', 'Vertical scale factor', parseIntArg)
     .option('--density <d>', 'Driver-specific density (light, normal, dark)')
     .option('--copies <n>', 'Number of copies', parseIntArg)
+    .option(
+      '--no-confirm',
+      'Send without out-of-band print confirmation (network printers whose SNMP page counter cannot be read)',
+    )
     .action(async (text: string, opts: CommanderPrintTextOpts) => {
       await printTextCommand(text, buildPrintTextOptions(opts));
     });
@@ -140,6 +149,10 @@ export function buildProgram(): Command {
     .option('--rotate <deg>', 'Rotation in degrees (0, 90, 180, 270)', parseRotateArg)
     .option('--density <d>', 'Driver-specific density (light, normal, dark)')
     .option('--copies <n>', 'Number of copies', parseIntArg)
+    .option(
+      '--no-confirm',
+      'Send without out-of-band print confirmation (network printers whose SNMP page counter cannot be read)',
+    )
     .action(async (file: string, opts: CommanderPrintImageOpts) => {
       await printImageCommand(file, buildPrintImageOptions(opts));
     });
