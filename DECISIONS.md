@@ -76,3 +76,36 @@ and dispatch to the corresponding decoder.
 gives a single `loadImageFile(path) → RawImageData` surface for the
 print-image command without spreading format knowledge across the
 codebase.
+
+## D6 — `--host` walks the drivers; every failure is a decline
+
+**Plan said (plan 17 D7):** walk installed drivers on `--host` without
+`--printer`; typed "not mine" errors mean move on, anything else is that
+driver's error.
+**Chose:** every rejection or synchronous throw from `openPrinter` is a
+decline, whatever its type. The walk only fails when all drivers decline,
+and then prints each driver's reason.
+
+**Why:** the published labelwriter-node throws a plain `Error` when
+`deviceKey` is missing on TCP, and future drivers may throw anything. A
+walk that rethrows untyped errors would make a Brother print die on an
+unrelated installed driver. The reasons are not lost: they are all shown
+when nobody succeeds, and `--printer <family>` still surfaces one
+driver's error verbatim. Sequential, not concurrent, so at most one
+driver holds a 9100 socket; the cost today is one SNMP timeout (only
+brother-ql identifies over the network).
+
+`selectPrinter` now opens the printer itself so there is one open site
+for the walk, the `--printer` path and the discovered path. Discovered
+network printers are re-opened with the discovered device key so the
+driver does not identify twice.
+
+## D7 — `list` shows a Serial column instead of a `serial=` suffix
+
+**Plan said (plan 17 D7):** render network rows as
+`brother-ql  QL-820NWBc  tcp  192.168.1.67:9100  serial=M5G679125`.
+**Chose:** a fifth `Serial` column on every row, blank when unknown.
+
+**Why:** USB rows carry serials too, and a column keeps the table
+aligned; the information is the same. The "multiple printers found"
+message keeps the `serial=` suffix, it is a sentence not a table.

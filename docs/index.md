@@ -54,10 +54,16 @@ Lists discovered printers across every installed driver.
 
 ```
 $ thermal-label list
-Family       Model            Transport  Connection
-brother-ql   QL-820NWB        usb        Bus 003 Device 010
-labelwriter  LabelWriter 450  usb        Bus 001 Device 004
+Family       Model            Transport  Connection         Serial
+brother-ql   QL-820NWBc       tcp        192.168.1.67:9100  M5G679125
+brother-ql   QL-800           usb        3.10
+labelwriter  LabelWriter 450  usb        1.4
 ```
+
+USB rows come from the drivers' USB enumeration. Network rows come from
+each driver's own LAN scan (Brother QL: one SNMP broadcast, about a
+second); a printer on another subnet, or with SNMP disabled, is not
+listed but still reachable with `--host`.
 
 `--drivers` shows which known driver packages are installed:
 
@@ -84,11 +90,22 @@ Media:     62mm continuous (62mm, continuous)
 Errors:    none
 ```
 
-Over TCP:
+Over TCP (the driver is found by asking the printer what it is, see
+[Network printers](#network-printers)):
 
 ```
-$ thermal-label status --printer brother-ql --host 192.168.1.42
+$ thermal-label status --host 192.168.1.67
+Printer:   QL-820NWBc (brother-ql)
+Status:    Ready
+Media:     62mm continuous (62mm, continuous)
+Errors:    none
+  Printer state: idle
+  Two-colour: not detectable over network
+Transport: TCP 192.168.1.67:9100
 ```
+
+Rows under `Errors:` are the driver's detail rows; warnings are shown in
+yellow.
 
 ### `print text <text>`
 
@@ -98,8 +115,17 @@ Renders text to a label and prints.
 thermal-label print text "BIN-42"
 thermal-label print text "FRAGILE" --invert --scale-x 2
 thermal-label print text "Hello" --printer brother-ql --density dark
-thermal-label print text "Label" --host 192.168.1.42 --printer brother-ql --copies 3
+thermal-label print text "Label" --host 192.168.1.67 --copies 3
+thermal-label print text "Label" --host 192.168.1.67 --device QL_820NWBc --media 251
 ```
+
+Before printing, the CLI queries status once (drivers size the job from
+the detected media and the error rows are echoed as warnings). If that
+query fails the print stops, unless `--media` is given: then it warns and
+prints with the media you named, sending the job blind (`confirm: false`):
+a driver that would normally confirm the print over the same channel
+(Brother QL over TCP checks the SNMP page counter) cannot, so "Printed"
+then means "sent", not "came out".
 
 Rendering uses [`@mbtech-nl/bitmap`](https://www.npmjs.com/package/@mbtech-nl/bitmap)'s
 pixel font — simple by design. For typography, barcodes, or logos, render
@@ -122,9 +148,12 @@ thermal-label print image label.png --rotate 90 --printer labelwriter
 | Flag | Description |
 |---|---|
 | `--printer <family>` | Restrict to a driver family: `brother-ql`, `labelwriter`, `labelmanager`. |
-| `--host <ip>` | Use TCP transport to the given host. Requires `--printer`. |
+| `--host <ip>` | Use TCP transport to the given host. Without `--printer`, every installed driver is asked in turn. |
 | `--port <port>` | TCP port (default `9100`). |
 | `--serial <sn>` | Target a specific printer by serial number. |
+| `--device <key>` | Registry key of the model (`QL_820NWBc`, `LW_550`, …) for drivers that cannot identify it themselves. Wins over identification. |
+| `--media <id>` | Media id or name from the driver's catalog (`251`, `"62mm continuous"`). Overrides detected media and lets a print go out when status cannot be read. |
+| `--community <name>` | SNMP community for network printers (default `public`). |
 
 ### `print text`
 
@@ -146,6 +175,43 @@ thermal-label print image label.png --rotate 90 --printer labelwriter
 | `--rotate <deg>` | `0` | Rotation: `0`, `90`, `180`, or `270`. |
 | `--density <d>` | `normal` | Driver-specific density. |
 | `--copies <n>` | `1` | Number of copies. |
+
+## Network printers
+
+`--host <ip>` without `--printer` walks the installed drivers in a fixed
+order (brother-ql, labelwriter, labelmanager) and hands the printer to the
+first one that opens it. A driver that cannot speak to that address
+declines and the walk moves on, so an installed-but-unrelated driver never
+breaks a print on another. Only when every driver declines does the CLI
+fail, and then it prints each driver's reason:
+
+```
+$ thermal-label status --host 192.168.1.67
+No installed driver could open 192.168.1.67:
+  brother-ql: no SNMP answer from 192.168.1.67; pass deviceKey, and media, since status is unavailable too
+    candidates (key  name):
+      QL_820NWBc  QL-820NWBc
+      PT_E550W    PT-E550W
+      …
+    copy, swapping the key for your model:
+      thermal-label status --host 192.168.1.67 --printer brother-ql --device QL_820NWBc --media <id>
+  labelwriter: TCP open requires `deviceKey` — port 9100 carries no model signal, …
+
+Pass --printer <family> to see one driver's error, or --device <key> to name the model.
+```
+
+How a driver identifies a network printer is its own business; Brother QL
+asks over SNMP (model, serial, state, loaded media) because port 9100 is
+write-only. When that is not possible (SNMP disabled, printer on another
+subnet with no broadcast, a model the driver does not list) `--device`
+names the model and `--media` names the roll, and the job goes out
+without a status read.
+
+Two-colour rolls (Brother DK-22251) cannot be told apart from plain
+62 mm rolls over the network; the status shows a `Two-colour: not
+detectable over network` warning and a job sized for the plain roll is
+rejected by the printer. Pass `--media 251` on those rolls. See the
+driver's troubleshooting page for the details.
 
 ## When multiple printers are connected
 

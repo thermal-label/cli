@@ -5,7 +5,7 @@ import { printImageCommand, type PrintImageCommandOptions } from './commands/pri
 import { printTextCommand, type PrintTextCommandOptions } from './commands/print-text.js';
 import { statusCommand, type StatusCommandOptions } from './commands/status.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.6.0';
 
 function parseIntArg(value: string): number {
   const n = Number.parseInt(value, 10);
