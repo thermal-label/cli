@@ -231,3 +231,79 @@ describe('print text command', () => {
     expect(process.exitCode).toBe(1);
   });
 });
+
+describe('print text: --media and status failures', () => {
+  const twoColour: MediaDescriptor = {
+    id: 251,
+    name: '62mm continuous (two-colour)',
+    widthMm: 62,
+    type: 'continuous',
+    palette: [
+      { name: 'black', rgb: [0, 0, 0] },
+      { name: 'red', rgb: [255, 0, 0] },
+    ],
+  };
+
+  function discoveryWith(
+    adapter: PrinterAdapter,
+    listMedia?: () => readonly MediaDescriptor[],
+  ): PrinterDiscovery {
+    const d = mockDiscovery({ adapter, printCalls: [], closeCalls: 0 });
+    d.openPrinter = () => Promise.resolve(adapter);
+    if (listMedia) d.listMedia = listMedia;
+    return d;
+  }
+
+  function importerFor(discovery: PrinterDiscovery) {
+    return (pkg: string): Promise<unknown> =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+  }
+
+  it('passes the resolved --media to print() and ignores detected media', async () => {
+    const mock = mockAdapter(stdMedia);
+    const printedMedia: (MediaDescriptor | undefined)[] = [];
+    mock.adapter.print = (_image, media): Promise<void> => {
+      printedMedia.push(media);
+      return Promise.resolve();
+    };
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia, twoColour]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '251',
+    });
+    expect(printedMedia).toEqual([twoColour]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('errors when --media names an unknown id, before printing', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: 'nope',
+    });
+    expect(lines.some(l => l.includes("Unknown media 'nope'"))).toBe(true);
+    expect(mock.printCalls).toHaveLength(0);
+    expect(mock.closeCalls).toBe(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('errors when the driver has no media catalog and --media is given', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(lines.some(l => l.includes('does not expose a media catalog'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+});

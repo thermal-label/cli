@@ -1,4 +1,4 @@
-import type { DiscoveredPrinter, OpenOptions } from '@thermal-label/contracts';
+import type { DiscoveredPrinter, MediaDescriptor, OpenOptions } from '@thermal-label/contracts';
 
 import {
   discoverAll,
@@ -13,6 +13,12 @@ export interface PrinterSelector {
   host?: string;
   port?: number;
   serial?: string;
+  /** `--device`: registry key, forwarded as `OpenOptions.deviceKey`. */
+  device?: string;
+  /** `--media`: media id or name, resolved via `resolveMedia` after selection. */
+  media?: string;
+  /** `--community`: SNMP community, forwarded as `OpenOptions.snmpCommunity`. */
+  community?: string;
 }
 
 export interface SelectionResult {
@@ -59,6 +65,8 @@ export async function selectPrinter(
     const opts: OpenOptions = { host: selector.host };
     if (selector.port !== undefined) opts.port = selector.port;
     if (selector.serial !== undefined) opts.serialNumber = selector.serial;
+    if (selector.device !== undefined) opts.deviceKey = selector.device;
+    if (selector.community !== undefined) opts.snmpCommunity = selector.community;
     const [driver] = filtered;
     if (!driver) throw new SelectionError('Internal: no driver after filter.');
     return { driver, openOptions: opts };
@@ -93,7 +101,35 @@ export async function selectPrinter(
 
   const opts: OpenOptions = {};
   if (picked.serialNumber !== undefined) opts.serialNumber = picked.serialNumber;
+  if (selector.device !== undefined) opts.deviceKey = selector.device;
+  if (selector.community !== undefined) opts.snmpCommunity = selector.community;
   return { driver, openOptions: opts };
+}
+
+/**
+ * Resolve `--media` against the driver's catalog by exact id or exact
+ * name (case-insensitive).
+ */
+export function resolveMedia(driver: LoadedDriver, media: string): MediaDescriptor {
+  const family = driver.discovery.family;
+  const catalog = driver.discovery.listMedia?.();
+  if (catalog === undefined) {
+    throw new SelectionError(
+      `Driver ${family} does not expose a media catalog; --media is not available for it.`,
+    );
+  }
+  const wanted = media.toLowerCase();
+  const found = catalog.find(m => String(m.id) === media || m.name.toLowerCase() === wanted);
+  if (found === undefined) {
+    const ids = catalog.map(m => `${String(m.id)}  ${m.name}`);
+    throw new SelectionError(
+      [
+        `Unknown media '${media}' for ${family}. Known media (id  name):`,
+        ...ids.map(l => `  ${l}`),
+      ].join('\n'),
+    );
+  }
+  return found;
 }
 
 function formatMultiple(printers: readonly DiscoveredPrinter[]): string {
@@ -106,4 +142,8 @@ function formatMultiple(printers: readonly DiscoveredPrinter[]): string {
   }
   lines.push('', 'Use --printer <family> or --serial <sn> to pick one.');
   return lines.join('\n');
+}
+
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

@@ -223,6 +223,52 @@ describe('status command', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('renders status details rows, warnings in place', async () => {
+    const { out, lines } = collect();
+    const { discovery } = mockDiscovery([
+      {
+        family: 'brother-ql',
+        name: 'QL-820NWBc',
+        status: baseStatus({
+          details: [
+            { label: 'Printer state', value: 'idle' },
+            { label: 'Two-colour', value: 'not detectable over network', severity: 'warn' },
+          ],
+        }),
+      },
+    ]);
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+    await statusCommand({ importer, out });
+    expect(lines.some(l => l.includes('Printer state: idle'))).toBe(true);
+    expect(lines.some(l => l.includes('Two-colour: not detectable over network'))).toBe(true);
+  });
+
+  it('shows --media as the media line and validates it against the catalog', async () => {
+    const { out, lines } = collect();
+    const { discovery } = mockDiscovery([
+      { family: 'brother-ql', name: 'QL-820NWBc', status: baseStatus() },
+    ]);
+    discovery.listMedia = () => [
+      { id: 251, name: '62mm continuous (two-colour)', widthMm: 62, type: 'continuous' },
+    ];
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+    await statusCommand({ importer, out, media: '251' });
+    expect(
+      lines.some(l => l.includes('62mm continuous (two-colour)') && l.includes('(from --media)')),
+    ).toBe(true);
+    expect(process.exitCode).toBe(0);
+
+    await statusCommand({ importer, out, media: '999' });
+    expect(lines.some(l => l.includes("Unknown media '999'"))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+
   it('uses TCP transport and prints Transport line when --host is set with --printer', async () => {
     const { out, lines } = collect();
     const { discovery, openCalls } = mockDiscovery([

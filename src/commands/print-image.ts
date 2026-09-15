@@ -1,15 +1,12 @@
 import chalk from 'chalk';
 
-import { MediaNotSpecifiedError } from '@thermal-label/contracts';
-
-import type { PrintOptions } from '@thermal-label/contracts';
-
 import type { DynamicImporter } from '../discovery.js';
 import { renderImageLabel, type ImageOptions, type ReadFileFn } from '../render.js';
 
-import { selectPrinter, SelectionError, type PrinterSelector } from './select.js';
+import { runPrint, type OutFn } from './print.js';
+import { errorMessage, selectPrinter, SelectionError, type PrinterSelector } from './select.js';
 
-export type OutFn = (line: string) => void;
+export type { OutFn } from './print.js';
 
 export interface PrintImageCommandOptions extends PrinterSelector, ImageOptions {
   density?: string;
@@ -41,7 +38,7 @@ export async function printImageCommand(
   try {
     image = await renderImageLabel(path, options, options.readFileFn);
   } catch (err) {
-    out(chalk.red(`Failed to load image: ${err instanceof Error ? err.message : String(err)}`));
+    out(chalk.red(`Failed to load image: ${errorMessage(err)}`));
     process.exitCode = 1;
     return;
   }
@@ -50,40 +47,12 @@ export async function printImageCommand(
   try {
     printer = await selection.driver.discovery.openPrinter(selection.openOptions);
   } catch (err) {
-    out(chalk.red(`Failed to open printer: ${err instanceof Error ? err.message : String(err)}`));
+    out(chalk.red(`Failed to open printer: ${errorMessage(err)}`));
     process.exitCode = 1;
     return;
   }
 
-  try {
-    try {
-      await printer.getStatus();
-    } catch {
-      // Ignore — see print-text.ts for rationale.
-    }
-
-    const copies = options.copies ?? 1;
-    const printOpts: PrintOptions = {};
-    if (options.density !== undefined) printOpts.density = options.density;
-    for (let i = 0; i < copies; i++) {
-      await printer.print(image, undefined, printOpts);
-    }
-    out(chalk.green(`Printed ${copies.toString()} label${copies === 1 ? '' : 's'}.`));
-  } catch (err) {
-    if (err instanceof MediaNotSpecifiedError) {
-      out(
-        chalk.red(
-          'No media is loaded or detected. Load media or use a driver with media auto-detection (e.g. Brother QL).',
-        ),
-      );
-      process.exitCode = 1;
-      return;
-    }
-    out(chalk.red(`Print failed: ${err instanceof Error ? err.message : String(err)}`));
-    process.exitCode = 1;
-  } finally {
-    await printer.close();
-  }
+  await runPrint(out, selection.driver, printer, image, options);
 }
 
 function defaultOut(line: string): void {

@@ -4,7 +4,7 @@ import type { MediaDescriptor, PrinterAdapter, PrinterStatus } from '@thermal-la
 
 import type { DynamicImporter } from '../discovery.js';
 
-import { selectPrinter, SelectionError, type PrinterSelector } from './select.js';
+import { resolveMedia, selectPrinter, SelectionError, type PrinterSelector } from './select.js';
 
 export type OutFn = (line: string) => void;
 
@@ -38,8 +38,17 @@ export async function statusCommand(options: StatusCommandOptions = {}): Promise
   }
 
   try {
+    const explicitMedia =
+      options.media === undefined ? undefined : resolveMedia(selection.driver, options.media);
     const status = await printer.getStatus();
-    printStatus(out, printer, status, options.host, options.port);
+    printStatus(out, printer, status, explicitMedia, options.host, options.port);
+  } catch (err) {
+    if (err instanceof SelectionError) {
+      out(chalk.red(err.message));
+      process.exitCode = 1;
+      return;
+    }
+    throw err;
   } finally {
     await printer.close();
   }
@@ -49,6 +58,7 @@ function printStatus(
   out: OutFn,
   printer: PrinterAdapter,
   status: PrinterStatus,
+  explicitMedia?: MediaDescriptor,
   host?: string,
   port?: number,
 ): void {
@@ -56,7 +66,11 @@ function printStatus(
   out(
     `${chalk.bold('Status:')}    ${status.ready ? chalk.green('Ready') : chalk.yellow('Not ready')}`,
   );
-  out(`${chalk.bold('Media:')}     ${formatMedia(status.mediaLoaded, status.detectedMedia)}`);
+  if (explicitMedia === undefined) {
+    out(`${chalk.bold('Media:')}     ${formatMedia(status.mediaLoaded, status.detectedMedia)}`);
+  } else {
+    out(`${chalk.bold('Media:')}     ${formatMedia(true, explicitMedia)} (from --media)`);
+  }
   if (status.errors.length === 0) {
     out(`${chalk.bold('Errors:')}    none`);
   } else {
@@ -65,12 +79,16 @@ function printStatus(
       out(`  - [${e.code}] ${e.message}`);
     }
   }
+  for (const d of status.details ?? []) {
+    const line = `  ${d.label}: ${d.value}`;
+    out(d.severity === 'warn' ? chalk.yellow(line) : line);
+  }
   if (host !== undefined) {
     out(`${chalk.bold('Transport:')} TCP ${host}:${(port ?? 9100).toString()}`);
   }
 }
 
-function formatMedia(mediaLoaded: boolean, media?: MediaDescriptor): string {
+export function formatMedia(mediaLoaded: boolean, media?: MediaDescriptor): string {
   if (!media) {
     return mediaLoaded ? 'loaded (details not detected)' : 'not detected';
   }
