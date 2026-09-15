@@ -56,8 +56,8 @@ Lists discovered printers across every installed driver.
 $ thermal-label list
 Family       Model            Transport  Connection         Serial
 brother-ql   QL-820NWBc       tcp        192.168.1.67:9100  M5G679125
-brother-ql   QL-800           usb        3.10
-labelwriter  LabelWriter 450  usb        1.4
+brother-ql   QL-800           usb        3:10
+labelwriter  LabelWriter 450  usb        1:4
 ```
 
 USB rows come from the drivers' USB enumeration. Network rows come from
@@ -125,7 +125,9 @@ query fails the print stops, unless `--media` is given: then it warns and
 prints with the media you named, sending the job blind (`confirm: false`):
 a driver that would normally confirm the print over the same channel
 (Brother QL over TCP checks the SNMP page counter) cannot, so "Printed"
-then means "sent", not "came out".
+then means "sent", not "came out". `--no-confirm` forces the same blind
+send when the status query worked but the driver still cannot confirm
+(the page counter is unreadable, or SNMP drops out between the two).
 
 Rendering uses [`@mbtech-nl/bitmap`](https://www.npmjs.com/package/@mbtech-nl/bitmap)'s
 pixel font — simple by design. For typography, barcodes, or logos, render
@@ -153,7 +155,7 @@ thermal-label print image label.png --rotate 90 --printer labelwriter
 | `--serial <sn>` | Target a specific printer by serial number. |
 | `--device <key>` | Registry key of the model (`QL_820NWBc`, `LW_550`, …) for drivers that cannot identify it themselves. Wins over identification. |
 | `--media <id>` | Media id or name from the driver's catalog (`251`, `"62mm continuous"`). Overrides detected media and lets a print go out when status cannot be read. |
-| `--community <name>` | SNMP community for network printers (default `public`). |
+| `--community <name>` | SNMP community for network printers opened with `--host` (default `public`). The LAN scan behind `list` and flag-less selection always uses the driver's default community. |
 
 ### `print text`
 
@@ -164,6 +166,7 @@ thermal-label print image label.png --rotate 90 --printer labelwriter
 | `--scale-y <n>` | `1` | Vertical scale factor. |
 | `--density <d>` | `normal` | Driver-specific density (`light`, `normal`, `dark`, …). |
 | `--copies <n>` | `1` | Number of copies. |
+| `--no-confirm` | confirm on | Send without out-of-band print confirmation (network printers whose SNMP page counter cannot be read). |
 
 ### `print image`
 
@@ -175,6 +178,7 @@ thermal-label print image label.png --rotate 90 --printer labelwriter
 | `--rotate <deg>` | `0` | Rotation: `0`, `90`, `180`, or `270`. |
 | `--density <d>` | `normal` | Driver-specific density. |
 | `--copies <n>` | `1` | Number of copies. |
+| `--no-confirm` | confirm on | Send without out-of-band print confirmation. |
 
 ## Network printers
 
@@ -207,7 +211,11 @@ asks over SNMP (model, serial, state, loaded media) because port 9100 is
 write-only. When that is not possible (SNMP disabled, printer on another
 subnet with no broadcast, a model the driver does not list) `--device`
 names the model and `--media` names the roll, and the job goes out
-without a status read.
+without a status read. `--community` covers a printer whose SNMP
+community is not `public`, but only on the `--host` path: the LAN scan
+that `list` and flag-less selection run goes through each driver's
+default discovery and asks with `public`, so a printer with a custom
+community is reached with `--host`.
 
 Two-colour rolls (Brother DK-22251) cannot be told apart from plain
 62 mm rolls over the network; the status shows a `Two-colour: not

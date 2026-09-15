@@ -95,7 +95,7 @@ Tracks completion of the steps in `PLAN.md` §10.
 - [x] `selectPrinter` opens; discovered network printers re-open with `deviceKey`
 - [x] `--media` resolved through `listMedia()`; `print` stops swallowing `getStatus()` failures
 - [x] `list`: host:port rows, Serial column, SNMP-broadcast hint
-- [x] Tests: `select.test.ts` (walk, re-open, media), status/list/print-text suites extended — 87 tests, coverage 95/89/85/95
+- [x] Tests: `select.test.ts` (walk, re-open, media), status/list/print-text suites extended — 91 tests, coverage 95/89/85/95
 - [x] Docs: `docs/index.md` network section + flags, README
 - [x] Version 0.6.0
 - [ ] Pin `@thermal-label/contracts ^0.6.2` and `@thermal-label/brother-ql-node ^0.6.2` + lockfile — after both are on npm
