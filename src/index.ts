@@ -5,7 +5,7 @@ import { printImageCommand, type PrintImageCommandOptions } from './commands/pri
 import { printTextCommand, type PrintTextCommandOptions } from './commands/print-text.js';
 import { statusCommand, type StatusCommandOptions } from './commands/status.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.6.0';
 
 function parseIntArg(value: string): number {
   const n = Number.parseInt(value, 10);
@@ -28,6 +28,9 @@ interface CommanderStatusOpts {
   host?: string;
   port?: number;
   serial?: string;
+  device?: string;
+  media?: string;
+  community?: string;
 }
 
 interface CommanderPrintTextOpts extends CommanderStatusOpts {
@@ -36,6 +39,8 @@ interface CommanderPrintTextOpts extends CommanderStatusOpts {
   scaleY?: number;
   density?: string;
   copies?: number;
+  /** commander negatable `--no-confirm`: `true` unless the flag is given. */
+  confirm?: boolean;
 }
 
 interface CommanderPrintImageOpts extends CommanderStatusOpts {
@@ -45,6 +50,7 @@ interface CommanderPrintImageOpts extends CommanderStatusOpts {
   rotate?: 0 | 90 | 180 | 270;
   density?: string;
   copies?: number;
+  confirm?: boolean;
 }
 
 function buildStatusOptions(opts: CommanderStatusOpts): StatusCommandOptions {
@@ -53,6 +59,9 @@ function buildStatusOptions(opts: CommanderStatusOpts): StatusCommandOptions {
   if (opts.host !== undefined) out.host = opts.host;
   if (opts.port !== undefined) out.port = opts.port;
   if (opts.serial !== undefined) out.serial = opts.serial;
+  if (opts.device !== undefined) out.device = opts.device;
+  if (opts.media !== undefined) out.media = opts.media;
+  if (opts.community !== undefined) out.community = opts.community;
   return out;
 }
 
@@ -63,6 +72,7 @@ function buildPrintTextOptions(opts: CommanderPrintTextOpts): PrintTextCommandOp
   if (opts.scaleY !== undefined) out.scaleY = opts.scaleY;
   if (opts.density !== undefined) out.density = opts.density;
   if (opts.copies !== undefined) out.copies = opts.copies;
+  if (opts.confirm === false) out.confirm = false;
   return out;
 }
 
@@ -74,7 +84,23 @@ function buildPrintImageOptions(opts: CommanderPrintImageOpts): PrintImageComman
   if (opts.rotate !== undefined) out.rotate = opts.rotate;
   if (opts.density !== undefined) out.density = opts.density;
   if (opts.copies !== undefined) out.copies = opts.copies;
+  if (opts.confirm === false) out.confirm = false;
   return out;
+}
+
+/** Selection flags shared by `status`, `print text` and `print image`. */
+function withSelectionFlags(cmd: Command): Command {
+  return cmd
+    .option('--printer <family>', 'Filter by driver family (brother-ql, labelwriter, labelmanager)')
+    .option('--host <ip>', 'Connect via TCP to the given host')
+    .option('--port <port>', 'TCP port (default 9100)', parseIntArg)
+    .option('--serial <sn>', 'Filter by serial number')
+    .option(
+      '--device <key>',
+      'Registry key of the model (e.g. QL_820NWBc) when the driver cannot identify it',
+    )
+    .option('--media <id>', "Media id or name from the driver's catalog; overrides detected media")
+    .option('--community <name>', 'SNMP community for network printers (default public)');
 }
 
 export function buildProgram(): Command {
@@ -94,48 +120,39 @@ export function buildProgram(): Command {
       await listCommand(cmdOpts);
     });
 
-  program
-    .command('status')
-    .description('Query the status of a connected printer.')
-    .option('--printer <family>', 'Filter by driver family (brother-ql, labelwriter, labelmanager)')
-    .option('--host <ip>', 'Connect via TCP to the given host')
-    .option('--port <port>', 'TCP port (default 9100)', parseIntArg)
-    .option('--serial <sn>', 'Filter by serial number')
-    .action(async (opts: CommanderStatusOpts) => {
-      await statusCommand(buildStatusOptions(opts));
-    });
+  withSelectionFlags(
+    program.command('status').description('Query the status of a connected printer.'),
+  ).action(async (opts: CommanderStatusOpts) => {
+    await statusCommand(buildStatusOptions(opts));
+  });
 
   const print = program.command('print').description('Print labels.');
 
-  print
-    .command('text <text>')
-    .description('Render text to a label and print.')
-    .option('--printer <family>', 'Filter by driver family')
-    .option('--host <ip>', 'Connect via TCP to the given host')
-    .option('--port <port>', 'TCP port (default 9100)', parseIntArg)
-    .option('--serial <sn>', 'Filter by serial number')
+  withSelectionFlags(print.command('text <text>').description('Render text to a label and print.'))
     .option('--invert', 'White text on black background')
     .option('--scale-x <n>', 'Horizontal scale factor', parseIntArg)
     .option('--scale-y <n>', 'Vertical scale factor', parseIntArg)
     .option('--density <d>', 'Driver-specific density (light, normal, dark)')
     .option('--copies <n>', 'Number of copies', parseIntArg)
+    .option(
+      '--no-confirm',
+      'Send without out-of-band print confirmation (network printers whose SNMP page counter cannot be read)',
+    )
     .action(async (text: string, opts: CommanderPrintTextOpts) => {
       await printTextCommand(text, buildPrintTextOptions(opts));
     });
 
-  print
-    .command('image <file>')
-    .description('Load an image file and print.')
-    .option('--printer <family>', 'Filter by driver family')
-    .option('--host <ip>', 'Connect via TCP to the given host')
-    .option('--port <port>', 'TCP port (default 9100)', parseIntArg)
-    .option('--serial <sn>', 'Filter by serial number')
+  withSelectionFlags(print.command('image <file>').description('Load an image file and print.'))
     .option('--threshold <n>', '1bpp threshold (0-255)', parseIntArg)
     .option('--dither', 'Floyd-Steinberg dithering')
     .option('--invert', 'Invert colours')
     .option('--rotate <deg>', 'Rotation in degrees (0, 90, 180, 270)', parseRotateArg)
     .option('--density <d>', 'Driver-specific density (light, normal, dark)')
     .option('--copies <n>', 'Number of copies', parseIntArg)
+    .option(
+      '--no-confirm',
+      'Send without out-of-band print confirmation (network printers whose SNMP page counter cannot be read)',
+    )
     .action(async (file: string, opts: CommanderPrintImageOpts) => {
       await printImageCommand(file, buildPrintImageOptions(opts));
     });

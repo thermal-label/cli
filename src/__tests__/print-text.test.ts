@@ -197,6 +197,20 @@ describe('print text command', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('recognises a MediaNotSpecifiedError from another contracts copy by name', async () => {
+    const foreign = new Error('no media');
+    foreign.name = 'MediaNotSpecifiedError';
+    const mock = mockAdapter(undefined, foreign);
+    const importer = (pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery: mockDiscovery(mock) })
+        : Promise.reject(new Error('missing'));
+    const lines: string[] = [];
+    await printTextCommand('X', { importer, out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('No media'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+
   it('errors cleanly when no printer is found', async () => {
     const importer = (pkg: string) => {
       void pkg;
@@ -229,5 +243,170 @@ describe('print text command', () => {
     await printTextCommand('X', { importer, out: s => lines.push(s) });
     expect(lines.some(l => l.includes('Failed to open printer'))).toBe(true);
     expect(process.exitCode).toBe(1);
+  });
+});
+
+describe('print text: --media and status failures', () => {
+  const twoColour: MediaDescriptor = {
+    id: 251,
+    name: '62mm continuous (two-colour)',
+    widthMm: 62,
+    type: 'continuous',
+    palette: [
+      { name: 'black', rgb: [0, 0, 0] },
+      { name: 'red', rgb: [255, 0, 0] },
+    ],
+  };
+
+  function discoveryWith(
+    adapter: PrinterAdapter,
+    listMedia?: () => readonly MediaDescriptor[],
+  ): PrinterDiscovery {
+    const d = mockDiscovery({ adapter, printCalls: [], closeCalls: 0 });
+    d.openPrinter = () => Promise.resolve(adapter);
+    if (listMedia) d.listMedia = listMedia;
+    return d;
+  }
+
+  function importerFor(discovery: PrinterDiscovery) {
+    return (pkg: string): Promise<unknown> =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing'));
+  }
+
+  it('passes the resolved --media to print() and ignores detected media', async () => {
+    const mock = mockAdapter(stdMedia);
+    const printedMedia: (MediaDescriptor | undefined)[] = [];
+    mock.adapter.print = (_image, media): Promise<void> => {
+      printedMedia.push(media);
+      return Promise.resolve();
+    };
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia, twoColour]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '251',
+    });
+    expect(printedMedia).toEqual([twoColour]);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('errors when --media names an unknown id, before printing', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: 'nope',
+    });
+    expect(lines.some(l => l.includes("Unknown media 'nope'"))).toBe(true);
+    expect(mock.printCalls).toHaveLength(0);
+    expect(mock.closeCalls).toBe(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('errors when the driver has no media catalog and --media is given', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(lines.some(l => l.includes('does not expose a media catalog'))).toBe(true);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('exits with the driver message when getStatus fails and no --media was given', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = () => Promise.reject(new Error('no SNMP answer from 10.0.0.9'));
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', { importer: importerFor(discovery), out: s => lines.push(s) });
+    expect(lines.some(l => l.includes('Status query failed: no SNMP answer from 10.0.0.9'))).toBe(
+      true,
+    );
+    expect(lines.some(l => l.includes('--media <id>'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(0);
+    expect(mock.closeCalls).toBe(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns and prints when getStatus fails but --media was given', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = () => Promise.reject(new Error('no SNMP answer from 10.0.0.9'));
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(lines.some(l => l.includes('Warning: status query failed (no SNMP answer'))).toBe(true);
+    expect(lines.some(l => l.includes('without print confirmation'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).toEqual({ confirm: false });
+    expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('--no-confirm sends blind even when the status query succeeds', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      confirm: false,
+    });
+    expect(lines.some(l => l.includes('Printed 1 label'))).toBe(true);
+    expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).toEqual({ confirm: false });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not touch confirm when the status query succeeds', async () => {
+    const mock = mockAdapter(stdMedia);
+    const discovery = discoveryWith(mock.adapter, () => [stdMedia]);
+    const lines: string[] = [];
+    await printTextCommand('X', {
+      importer: importerFor(discovery),
+      out: s => lines.push(s),
+      media: '259',
+    });
+    expect(mock.printCalls).toHaveLength(1);
+    expect(mock.printCalls[0]?.options).not.toHaveProperty('confirm');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('surfaces status error rows and warn details as warnings and still prints', async () => {
+    const mock = mockAdapter(stdMedia);
+    mock.adapter.getStatus = (): Promise<PrinterStatus> =>
+      Promise.resolve({
+        ready: true,
+        mediaLoaded: true,
+        detectedMedia: stdMedia,
+        errors: [{ code: 'low_media', message: 'Roll nearly out' }],
+        rawBytes: new Uint8Array(),
+        details: [
+          { label: 'Printer state', value: 'idle' },
+          { label: 'Two-colour', value: 'not detectable over network', severity: 'warn' },
+        ],
+      });
+    const discovery = discoveryWith(mock.adapter);
+    const lines: string[] = [];
+    await printTextCommand('X', { importer: importerFor(discovery), out: s => lines.push(s) });
+    expect(
+      lines.some(l => l.includes('Warning: printer reports [low_media] Roll nearly out')),
+    ).toBe(true);
+    expect(lines.some(l => l.includes('Warning: Two-colour: not detectable over network'))).toBe(
+      true,
+    );
+    expect(lines.some(l => l.includes('Printer state'))).toBe(false);
+    expect(mock.printCalls).toHaveLength(1);
   });
 });

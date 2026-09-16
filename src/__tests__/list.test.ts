@@ -125,8 +125,52 @@ describe('list command', () => {
         : Promise.reject(new Error('missing')),
     );
     await listCommand({ importer, out });
-    expect(lines[0]).toBe('No printers found.');
+    expect(lines[0]).toMatch(/^No printers found\. USB: .* Network: .*SNMP broadcast.*--host <ip>/);
     expect(lines.some(l => l.includes('brother-ql'))).toBe(true);
+  });
+
+  it('renders network rows as host:port with the serial column', async () => {
+    const { out, lines } = collectOutput();
+    const discovery: PrinterDiscovery = {
+      family: 'brother-ql',
+      listPrinters: (): Promise<DiscoveredPrinter[]> =>
+        Promise.resolve([
+          {
+            device: mockDevice({
+              family: 'brother-ql',
+              name: 'QL-820NWBc',
+              transport: 'tcp',
+              connectionId: 'opaque',
+            }),
+            transport: 'tcp',
+            connectionId: 'opaque',
+            host: '192.168.1.67',
+            port: 9100,
+            serialNumber: 'M5G679125',
+          },
+          {
+            device: mockDevice({
+              family: 'brother-ql',
+              name: 'QL-800',
+              transport: 'usb',
+              connectionId: '3.10',
+            }),
+            transport: 'usb',
+            connectionId: '3.10',
+          },
+        ]),
+      openPrinter: () => Promise.reject(new Error('not used')),
+    };
+    const importer = vi.fn((pkg: string) =>
+      pkg === '@thermal-label/brother-ql-node'
+        ? Promise.resolve({ discovery })
+        : Promise.reject(new Error('missing')),
+    );
+    await listCommand({ importer, out });
+    expect(lines[0]).toMatch(/Family\s+Model\s+Transport\s+Connection\s+Serial/);
+    expect(lines[1]).toMatch(/brother-ql\s+QL-820NWBc\s+tcp\s+192\.168\.1\.67:9100\s+M5G679125/);
+    expect(lines[2]).toMatch(/brother-ql\s+QL-800\s+usb\s+3\.10\s*$/);
+    expect(lines.join('\n')).not.toContain('opaque');
   });
 
   it('--drivers flag shows package install status with all three known drivers', async () => {

@@ -26,14 +26,21 @@ thermal-label list                       # detect connected printers
 thermal-label status                     # readiness + media + errors
 thermal-label print text "Hello World"   # quick text print
 thermal-label print image logo.png       # PNG / JPEG print
+thermal-label print text "hi" --host 192.168.1.67          # network printer, driver auto-picked
+thermal-label print text "hi" --host 192.168.1.67 --device QL_820NWBc --media 251   # when it cannot identify itself
 ```
+
+Network printers show up in `list` when the driver can find them on the
+LAN (Brother QL: SNMP broadcast); `--host` reaches the ones it cannot.
+`--device <key>` and `--media <id>` take over when identification or
+media detection is not possible.
 
 ## Documentation
 
 Full docs at **<https://thermal-label.github.io/cli/>**.
 
 - Command + flag reference
-- TCP / WebUSB usage
+- Network printers: `--host`, `--device`, `--media`, `--community`
 - thermal-label-cli vs burnmark-cli — when to use which
 
 ## Philosophy
